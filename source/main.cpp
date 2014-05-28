@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "tool.h"
 
@@ -7,6 +8,9 @@
 
 char userFileName[] = "/user";
 char groupFileName[] = "/group";
+char dataFileName[] = "data.txt";
+
+FILE * dataFp = NULL;
 
 char currentPwd[PWD_LENGTH];
 User currentUser;
@@ -37,7 +41,7 @@ void run()
 			//创建文件夹
 		}
 		else if (strcmp(cmds[0], "rmdir") == 0){
-
+			//删除文件夹
 		}
 		else if (strcmp(cmds[0], "ls") == 0){
 			//罗列当前目录下文件属性
@@ -58,9 +62,16 @@ void run()
 	}
 }
 
-void main()
+int main()
 {
 	//进行登陆检查
+
+	dataFp = fopen(dataFileName, "r+");
+
+	if(NULL == dataFp){
+		printf("Can not open emulate file: %s.\r\n", dataFileName);
+		exit(-1);
+	}
 
 	if(login())
 	{
@@ -69,5 +80,5 @@ void main()
 	else{
 		printf("登陆失败！\r\n");
 	}
-
+	return 0;
 }
