@@ -11,6 +11,6 @@ void RM(char ** cmds); //remove file
 void MKDIR(char ** cmds); //create folder
 void RMDIR(char ** cmds); //remove folder
 void LS(char ** cmds); //list files attributes
-void LS(char ** cmds); //write file
+void WRITE(char ** cmds); //write file
 void READ(char ** cmds); //read file
 void UMASK(char ** cmds); //set the file or folder's attributes

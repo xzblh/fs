@@ -4,8 +4,8 @@
 	#include "INODE.h"
 
 	typedef struct _file{
-		INODE * inodeP; //文件的INODE对象
-		int offset;//文件指针的当前偏移量
+		INODE * inodeP; //鏂囦欢鐨処NODE瀵硅薄
+		int offset;//鏂囦欢鎸囬拡鐨勫綋鍓嶅亸绉婚噺
 	}FILE_FS;
 
 	char getc_FS(FILE_FS * fp);

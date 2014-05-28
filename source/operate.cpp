@@ -24,7 +24,7 @@ void LS(char ** cmds) //list files attributes
 {
 
 }
-void LS(char ** cmds) //write file
+void WRITE(char ** cmds) //write file
 {
 
 }
