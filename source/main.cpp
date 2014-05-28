@@ -5,6 +5,9 @@
 
 #define PWD_LENGTH 1024
 
+char userFileName[] = "/user";
+char groupFileName[] = "/group";
+
 char currentPwd[PWD_LENGTH];
 User currentUser;
 
@@ -58,6 +61,13 @@ void run()
 void main()
 {
 	//进行登陆检查
-	login();
-	run();
+
+	if(login())
+	{
+		run();
+	}
+	else{
+		printf("登陆失败！\r\n");
+	}
+
 }

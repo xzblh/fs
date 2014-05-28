@@ -2,3 +2,10 @@
 a.out
 .project
 .cproject
+Debug/
+fs/
+ipch/
+fs.sdf
+fs.sln
+fs.suo
+fs.opensdf
