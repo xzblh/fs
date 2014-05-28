@@ -22,32 +22,32 @@ void run()
 		}
 		cmds = parse(command);
 		if (strcmp(cmds[0], "cd") == 0){
-			//½øÈëÄ¿Â¼
+			//è¿›å…¥ç›®å½•
 		}
 		else if (strcmp(cmds[0], "touch") == 0){
-			//´´½¨ÎÄ¼ş
+			//åˆ›å»ºæ–‡ä»¶
 		}
 		else if (strcmp(cmds[0], "rm") == 0){
-			//É¾³ıÎÄ¼ş
+			//åˆ é™¤æ–‡ä»¶
 		}
 		else if (strcmp(cmds[0], "mkdir") == 0){
-			//´´½¨ÎÄ¼ş¼Ğ
+			//åˆ›å»ºæ–‡ä»¶å¤¹
 		}
 		else if (strcmp(cmds[0], "rmdir") == 0){
 
 		}
 		else if (strcmp(cmds[0], "ls") == 0){
-			//ÂŞÁĞµ±Ç°Ä¿Â¼ÏÂÎÄ¼şÊôĞÔ
+			//ç½—åˆ—å½“å‰ç›®å½•ä¸‹æ–‡ä»¶å±æ€§
 		}
 		else if (strcmp(cmds[0], "write") == 0){
-			//Ğ´ÎÄ¼ş²Ù×÷
+			//å†™æ–‡ä»¶æ“ä½œ
 		}
 		else if (strcmp(cmds[0], "read") == 0){
-			//¶ÁÎÄ¼şÄÚÈİ
+			//è¯»æ–‡ä»¶å†…å®¹
 
 		}
 		else if (strcmp(cmds[0], "umask") == 0){
-			//ÎÄ¼ş»òÄ¿Â¼È¨ÏŞÉèÖÃ
+			//æ–‡ä»¶æˆ–ç›®å½•æƒé™è®¾ç½®
 		}
 		else{
 			continue;
@@ -57,7 +57,7 @@ void run()
 
 void main()
 {
-	//½øĞĞµÇÂ½¼ì²é
+	//è¿›è¡Œç™»é™†æ£€æŸ¥
 	login();
 	run();
 }

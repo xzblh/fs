@@ -31,7 +31,7 @@ void * Malloc(unsigned int Size_t)
 {
 	void * _p = malloc(Size_t);
 	if (_p == NULL)[
-		printf("ÄÚ´æÉêÇëÊ§°Ü£¡\r\n");
+		printf("å†…å­˜ç”³è¯·å¤±è´¥ï¼\r\n");
 		exit(-3);
 	]
 	return _p;
@@ -54,14 +54,14 @@ void login()
 {
 	char username[16];
 	char password[16];
-	printf("ÊäÈëÓÃ»§Ãû£º\r\n");
+	printf("è¾“å…¥ç”¨æˆ·åï¼š\r\n");
 	while (scanf("%s", username) < 1)){
-		printf("ÊäÈëÓÃ»§Ãû£º\r\n");
+		printf("è¾“å…¥ç”¨æˆ·åï¼š\r\n");
 		continue;
 	}
-	printf("ÊäÈëÃÜÂë£º\r\n"); //Õâ¸öµØ·½ĞèÒªÈÃÆÁÄ»²»½øĞĞ»ØÏÔ
+	printf("è¾“å…¥å¯†ç ï¼š\r\n"); //è¿™ä¸ªåœ°æ–¹éœ€è¦è®©å±å¹•ä¸è¿›è¡Œå›æ˜¾
 	while (scanf("%s", username) < 1)){
-		printf("ÊäÈëÃÜÂë£º\r\n");
+		printf("è¾“å…¥å¯†ç ï¼š\r\n");
 		continue;
 	}
 	_login(username, password);
