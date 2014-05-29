@@ -23,3 +23,8 @@ void * Malloc(unsigned int Size_t);
 char * ltrim(char * s, char c);
 BOOL login();
 BOOL _login(char * username, char * password);
+int getInode(char * path); //等价于书上的NameI()
+void writeBootSector();
+int countMem(void * mem, int length);
+int countChar(unsigned char ch);
+int findZero(void * mem, int length);

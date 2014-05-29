@@ -13,7 +13,7 @@ char groupFileName[] = "/group";
 char dataFileName[] = "data.txt";
 
 FILE * dataFp = NULL;
-SUPER_BLOCK superBlockPointer = NULL;
+SUPER_BLOCK * superBlockPointer = NULL;
 
 char currentPwd[PWD_LENGTH];
 User currentUser;
@@ -72,23 +72,65 @@ void run()
 		}
 	}
 }
-void inditSuperBlock()
+void initSuperBlock()
 {
+	superBlockPointer = (SUPER_BLOCK *)Malloc(sizeof(SUPER_BLOCK));
+	superBlockPointer->blockCount = 8*512*128; // Inode数目*每个Inode能够访问的数目（即512/4=128）  文件最大大小约为256M
+	// 大概相当于这么多，没有去掉超级块、bitmap和inode节点占用的数据块
+	superBlockPointer->inodeCount = 8*512;
+	//superBlockPointer->blockFreeCount = ;
+	//superBlockPointer->inodeFreeCount = ;
 
+	superBlockPointer->blockSize = 512;
+	superBlockPointer->inodeSize = 32;
+	superBlockPointer->blockBitMapCount = 8;
+	superBlockPointer->blockBitMapStart = 2;
+	superBlockPointer->inodeBitMapCount = 8;
+	superBlockPointer->inodeBitMapStart = superBlockPointer->blockBitMapStart + superBlockPointer->blockBitMapCount;
+	//从上，可以看出data.txt文件至少包含一个启动块，一个超级块，一个blockBitMap，即8块，一个InodeBitMap， 即8块。
+	//一个Inode节点区，该区大概8*512*32字节，即256个扇区。总共 1+1+8+8+256 = 274
+
+	//printf("%d\r\n", 
+	//	(1+1+superBlockPointer->blockBitMapCount+superBlockPointer->inodeBitMapCount + 
+	//	superBlockPointer->inodeCount*superBlockPointer->inodeSize/superBlockPointer->blockSize));
+	//getchar();
+	writeBootSector();
+	superBlockPointer->bBitMap = Malloc(superBlockPointer->blockBitMapCount * superBlockPointer->blockSize);
+	superBlockPointer->iBitMap = Malloc(superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
+	fseek(dataFp, 0, SEEK_END);
+	int l = ftell(dataFp);
+	if(ftell(dataFp) < (superBlockPointer->blockSize * 
+		(1+1+superBlockPointer->blockBitMapCount+superBlockPointer->inodeBitMapCount ))){
+			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 256;
+			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount;
+			writeSuperBlock(superBlockPointer, dataFp);
+			memset(superBlockPointer->bBitMap, 0xFF, 32);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+32), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize);
+			memset(superBlockPointer->iBitMap, 0, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
+			writeBitMap(superBlockPointer, dataFp);
+	}
+	else{
+		readBitMap(superBlockPointer, dataFp);
+	}
 }
 int main()
 {
 	//进行登陆检查
-
+	
 	dataFp = fopen(dataFileName, "r+");
+	if(NULL == dataFp){
+		dataFp = fopen(dataFileName, "w+");
+	}
 
 	if(NULL == dataFp){
 		printf("Can not open emulate file: %s.\r\n", dataFileName);
+		getchar();
 		exit(-1);
 	}
 	else{
 		//初始化超级块数据结构
-		inditSuperBlock();
+		//及超级块的数据校验
+		initSuperBlock();
 	}
 
 	if(login())
