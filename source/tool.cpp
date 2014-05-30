@@ -164,6 +164,8 @@ BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
 		return TRUE;
 	}
 	if(userP->GID == inodeP->GID){
+		if(){
 
+		}
 	}
 }

@@ -31,3 +31,4 @@ int countMem(void * mem, int length);
 int countChar(unsigned char ch);
 int findZero(void * mem, int length);
 BOOL hasCreateFileAuthority(INODE * inodeP, User * userP);
+
