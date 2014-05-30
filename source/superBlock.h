@@ -1,6 +1,8 @@
 ﻿#include <stdio.h>
 #include <time.h>
 
+#include "INODE.h"
+
 #ifndef _SUPERBLOCK_HEADER_
 #define _SUPERBLOCK_HEADER_
 	typedef struct _superblock{
@@ -15,6 +17,7 @@
 		unsigned int inodeBitMapCount; //inode的bitmap占用了多少扇区  固定8个扇区
 		unsigned int inodeBitMapStart; //inode的bitmap的起始扇区
 		time_t mountTime; //挂载时间
+		INODE * inode;
 		void * bBitMap; //存储blockBitMap数据
 		void * iBitMap; //存储inodeBitMap数据
 	}SUPER_BLOCK;
@@ -23,3 +26,6 @@
 void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp);
 void writeBitMap(SUPER_BLOCK * superBlockP, FILE * fp);
 void readBitMap(SUPER_BLOCK * superBlockP, FILE * fp);
+void writeRoot(SUPER_BLOCK * superBlockP);
+void readRoot(SUPER_BLOCK * superBlockP);
+int getFileSizeLimit(SUPER_BLOCK * superBlockP);

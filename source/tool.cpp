@@ -108,7 +108,7 @@ int countMem(void * mem, int length)
 		return 0;
 	}
 	int count = 0;
-	unsigned char ch = NULL;
+	unsigned char ch;
 	int i = 0;
 	while(i < length){
 		ch = str[i];
@@ -135,7 +135,7 @@ int findZero(void * mem, int length) //查找并设置bitmap
 		return 0;
 	}
 	int pos = 0;
-	unsigned char ch = NULL;
+	unsigned char ch;
 	int i = 0;
 	while(i < length){
 		ch = str[i];
@@ -146,7 +146,7 @@ int findZero(void * mem, int length) //查找并设置bitmap
 			int tmp = countChar(ch);
 			unsigned char a = 1 << tmp;
 			str[i] = ch | a;
-			return pos + tmp + 1;
+			return pos + tmp;
 		}
 		i++;
 	}

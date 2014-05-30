@@ -2,6 +2,7 @@
 a.out
 .project
 .cproject
+.autotools
 Debug/
 fs/
 ipch/

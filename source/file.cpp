@@ -1,4 +1,28 @@
+#include <stdio.h>
+
+#include "superBlock.h"
 #include "file.h"
+
+extern FILE * dataFp;
+extern SUPER_BLOCK * superBlockPointer;
+
+int writeContent(INODE * inodeP, void * mem, int length, int offset)
+{
+	if(length + offset >= getFileSizeLimit(superBlockPointer)){
+		//printf("超出单文件大小限！\r\n");
+		return -1;
+	}
+	int l = ftell(dataFp);
+	fseek(dataFp, inodeP->blockNumber * superBlockPointer->blockSize, SEEK_SET);
+	fwrite(mem, length, 1, dataFp);
+	fseek(dataFp, l, SEEK_SET);
+	return 0;
+}
+
+int createFile(INODE * inodeP)
+{
+
+}
 
 
 char getc_FS(FILE_FS * fp)

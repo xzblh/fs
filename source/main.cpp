@@ -16,7 +16,7 @@ FILE * dataFp = NULL;
 SUPER_BLOCK * superBlockPointer = NULL;
 
 char currentPwd[PWD_LENGTH];
-User currentUser;
+User * currentUser = NULL;
 
 void run()
 {
@@ -82,7 +82,7 @@ void initSuperBlock()
 	//superBlockPointer->inodeFreeCount = ;
 
 	superBlockPointer->blockSize = 512;
-	superBlockPointer->inodeSize = 32;
+	superBlockPointer->inodeSize = 64;
 	superBlockPointer->blockBitMapCount = 8;
 	superBlockPointer->blockBitMapStart = 2;
 	superBlockPointer->inodeBitMapCount = 8;
@@ -95,24 +95,31 @@ void initSuperBlock()
 	//	superBlockPointer->inodeCount*superBlockPointer->inodeSize/superBlockPointer->blockSize));
 	//getchar();
 	writeBootSector();
-	superBlockPointer->bBitMap = Malloc(superBlockPointer->blockBitMapCount * superBlockPointer->blockSize);
-	superBlockPointer->iBitMap = Malloc(superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
+	superBlockPointer->bBitMap = Malloc(superBlockPointer->blockBitMapCount * superBlockPointer->blockSize / 8);
+	superBlockPointer->iBitMap = Malloc(superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize / 8);
 	fseek(dataFp, 0, SEEK_END);
 	int l = ftell(dataFp);
 	if(ftell(dataFp) < (superBlockPointer->blockSize * 
 		(1+1+superBlockPointer->blockBitMapCount+superBlockPointer->inodeBitMapCount ))){
+			currentUser->GID = 0;
+			currentUser->UID = 0;
+			strcpy(currentUser->passwd, "root");
+			strcpy(currentUser->username, "root");
 			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 256;
-			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount;
+			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount - 1;
 			writeSuperBlock(superBlockPointer, dataFp);
 			memset(superBlockPointer->bBitMap, 0xFF, 32);
-			memset((void*)((char *)(superBlockPointer->bBitMap)+32), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+32), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize -32);
 			memset(superBlockPointer->iBitMap, 0, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
 			writeBitMap(superBlockPointer, dataFp);
+			writeRoot(superBlockPointer);
 	}
 	else{
 		readBitMap(superBlockPointer, dataFp);
+		readRoot(superBlockPointer);
 	}
 }
+
 int main()
 {
 	//进行登陆检查
@@ -122,6 +129,9 @@ int main()
 		dataFp = fopen(dataFileName, "w+");
 	}
 
+	currentUser = (User*)Malloc(sizeof(User));
+	currentUser->username = (char*)Malloc(16);
+	currentUser->passwd = (char*)Malloc(16);
 	if(NULL == dataFp){
 		printf("Can not open emulate file: %s.\r\n", dataFileName);
 		getchar();

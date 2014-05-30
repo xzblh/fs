@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "tool.h"
 #include "superBlock.h"
+
+extern User * currentUser;
 
 void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp)
 {
@@ -37,4 +40,28 @@ void readBitMap(SUPER_BLOCK * superBlockP, FILE * fp)
 	fread(superBlockP->iBitMap, superBlockP->blockSize, superBlockP->inodeBitMapCount, fp);
 	superBlockP->inodeFreeCount = superBlockP->inodeCount - countMem(superBlockP->iBitMap,
 		superBlockP->inodeBitMapCount * superBlockP->blockSize);
+}
+
+void writeRoot(SUPER_BLOCK * superBlockP)
+{
+	//只有初始化时才会调用到这个文件，通常是调用下面的读方法
+	//inodeP的inodeNumber就是0
+	INODE * inodeP = createINODE();
+	inodeP->authority = 1; //drwxr-xr-x
+	writeINODE(inodeP);
+
+	writeAddUser(currentUser, inodeP);
+}
+
+void readRoot(SUPER_BLOCK * superBlockP)
+{
+
+}
+
+int getFileSizeLimit(SUPER_BLOCK * superBlockP)
+{
+	if(NULL == superBlockP){
+		return 0;
+	}
+	return superBlockP->blockSize * (superBlockP->blockSize / 4);
 }
