@@ -64,7 +64,7 @@ void writeUser(User * userP)
 
 BOOL isDir(INODE * inodeP)
 {
-	if(inodeP->authority && 0xFFFFFF)
+	if(inodeP->authority && _DIR_DEFINE)
 		return TRUE;
 	else
 		return FALSE;

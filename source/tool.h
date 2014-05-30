@@ -18,6 +18,8 @@ typedef struct _user{
 }User;
 #endif
 
+#include "INODE.h"
+
 char ** parse(char * s);
 void * Malloc(unsigned int Size_t);
 char * ltrim(char * s, char c);
@@ -28,3 +30,4 @@ void writeBootSector();
 int countMem(void * mem, int length);
 int countChar(unsigned char ch);
 int findZero(void * mem, int length);
+BOOL hasCreateFileAuthority(INODE * inodeP, User * userP);

@@ -19,9 +19,12 @@ int writeContent(INODE * inodeP, void * mem, int length, int offset)
 	return 0;
 }
 
-int createFile(INODE * inodeP)
+int createFile(INODE * inodeP, char * fileName)
 {
-
+	if(!isDir(inodeP)){
+		return -1;
+	}
+	INODE * tmp = createINODE();
 }
 
 

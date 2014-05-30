@@ -20,25 +20,31 @@
 		unsigned int  length; // 文件长度
 	}INODE;
 
-#define DIR_DEFINE          0x00001000 //
-#define FILE_DEFINE         0x00000800 //
-#define ROOT_DEFINE         0x00000400
-#define TMP_DEFINE          0x00000200
+// 一个unsigned int 共32位从高到低依次
+//  1111    1111   1111    1111  1111    1111  1111   1111
+//  <--  一  -->    <--  二  -->  <--  三  -->  <--  四  -->
+//第四个字节中分别代表   wx rwx rwx
+//第三个字节中分别代表       d- str
+
+#define _DIR_DEFINE          0x00001000 //
+#define _FILE_DEFINE         0x00000800 //
+#define _ROOT_DEFINE         0x00000400
+#define _TMP_DEFINE          0x00000200
 
 //用户权限宏
-#define USER_READ_DEFINE    0x00000100
-#define USER_WRITE_DEFINE   0x00000080
-#define USER_EXEC_DEFINE    0x00000040
+#define _USER_READ_DEFINE    0x00000100
+#define _USER_WRITE_DEFINE   0x00000080
+#define _USER_EXEC_DEFINE    0x00000040
 
 //用户组权限宏
-#define GROUP_READ_DEFINE   0x00000020
-#define GROUP_WRITE_DEFINE  0x00000010
-#define GROUP_EXEC_DEFINE   0x00000008
+#define _GROUP_READ_DEFINE   0x00000020
+#define _GROUP_WRITE_DEFINE  0x00000010
+#define _GROUP_EXEC_DEFINE   0x00000008
 
 //其他人的权限宏
-#define OTHER_READ_DEFINE   0x00000004
-#define OTHER_WRITE_DEFINE  0x00000002
-#define OTHER_EXEC_DEFINE   0x00000001
+#define _OTHER_READ_DEFINE   0x00000004
+#define _OTHER_WRITE_DEFINE  0x00000002
+#define _OTHER_EXEC_DEFINE   0x00000001
 
 #define _755_AUTHORITY_FILE_ 0x000009ED  //755 的 -rwxr-xr-x权限
 #define _755_AUTHORITY_DIR_  0x000011ED  //755 的 drwxr-xr-x权限

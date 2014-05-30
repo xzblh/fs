@@ -152,3 +152,18 @@ int findZero(void * mem, int length) //查找并设置bitmap
 	}
 	return -1;
 }
+
+
+BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
+{
+	if(userP->UID == 0){
+		//ROOT 则返回TRUE
+		return TRUE;
+	}
+	if(userP->UID == inodeP->UID){
+		return TRUE;
+	}
+	if(userP->GID == inodeP->GID){
+
+	}
+}
