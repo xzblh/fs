@@ -6,3 +6,6 @@
 	}BLOCK;
 
 #endif
+
+void writeBlock(BLOCK * blockP, void * mem);
+BLOCK * createBlock();

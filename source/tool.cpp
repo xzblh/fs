@@ -3,7 +3,9 @@
 #include <string.h>
 
 #include "tool.h"
+#include "superBlock.h"
 
+extern SUPER_BLOCK * superBlockPointer;
 extern User currentUser;
 extern FILE * dataFp ;
 
@@ -76,13 +78,16 @@ BOOL _login(char * username, char * password)
 	return TRUE;
 }
 
-int getInode(char * path) //等价于书上的NameI()
+INODE * getInode(char * path) //等价于书上的NameI()
 {
 	if(NULL == path){
-		return -1;
+		return NULL;
 	}
 	if(path[0] != '/'){
-		return -1;
+		return NULL;
+	}
+	if(strcmp(path, "/") == 0){
+		return superBlockPointer->inode;
 	}
 }
 
@@ -164,8 +169,30 @@ BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
 		return TRUE;
 	}
 	if(userP->GID == inodeP->GID){
-		if(){
+		if(inodeP->authority && _GROUP_WRITE_DEFINE_)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	if(inodeP->authority && _OTHER_WRITE_DEFINE_)
+		return TRUE;
+	else
+		return FALSE;
+}
 
-		}
+void writeNull(int count, FILE * fp)
+{
+	char c = 0;
+	int i = 0;
+	while(i < count){
+		fwrite(&c, 1, 1, fp);
+	}
+}
+
+void writeChar(char * s, int count, FILE * fp) //把某个字符写到文件当前位置count次
+{
+	int i = 0;
+	while(i < count){
+		fwrite(s, strlen(s), 1, fp);
 	}
 }

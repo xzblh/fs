@@ -5,25 +5,32 @@
 #include "superBlock.h"
 #include "INODE.h"
 #include "tool.h"
+#include "block.h"
 
 
 extern FILE * dataFp;
 extern SUPER_BLOCK * superBlockPointer;
-extern User currentUser;
+extern User * currentUser;
 
-INODE * createINODE()
+
+/************************************************************************/
+/* 获得一个未使用的INode，一个未使用的block，并初始化这个block为全0     */
+/************************************************************************/
+INODE * createINODE(unsigned int authority)
 {
 	int inodePos = findZero(superBlockPointer->iBitMap, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize / 8);
 	INODE * inodeP = (INODE*)Malloc(sizeof(INODE));
 	inodeP->inodeNumber = inodePos;
-	inodeP->GID = currentUser.GID;
-	inodeP->UID = currentUser.UID;
+	inodeP->GID = currentUser->GID;
+	inodeP->UID = currentUser->UID;
 	//inodeP->cTime = now(); //当前时间
 	//inodeP->mTime = now(); //修改时间
 	//inodeP->aTime = now(); //访问时间
-	inodeP->authority  = _755_AUTHORITY_DIR_; // 默认drwxr-xr-x 755
-	int blockPos = findZero(superBlockPointer->bBitMap, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize / 8);
-	inodeP->blockNumber = blockPos;
+	inodeP->authority  = authority;
+
+	BLOCK * blockP = createBlock();
+	inodeP->blockNumber = blockP->blockNumber;
+	free(blockP);
 	inodeP->length = 0;
 	return inodeP;
 }
@@ -33,7 +40,19 @@ void writeINODE(INODE * inodeP)
 	//data.txt的区块偏移， 加上INODE节点区的偏移
 	int offset = inodeP->inodeNumber * sizeof(INODE) + 17 * superBlockPointer->blockSize;
 	if(fseek(dataFp, offset, SEEK_SET) == 0){
-		fwrite(inodeP, sizeof(INODE), 1, dataFp);
+		fwrite(&inodeP->aTime, 4, 1, dataFp);
+		fwrite(&inodeP->cTime, 4, 1, dataFp);
+		fwrite(&inodeP->mTime, 4, 1, dataFp);
+		fwrite(&inodeP->GID, 4, 1, dataFp);
+		fwrite(&inodeP->UID, 4, 1, dataFp);
+		fwrite(&inodeP->authority, 4, 1, dataFp);
+		fwrite(&inodeP->inodeNumber, 4, 1, dataFp);
+		fwrite(&inodeP->blockNumber, 4, 1, dataFp);
+		fwrite(&inodeP->length, 4, 1, dataFp);
+		BLOCK block;
+		block.blockNumber = inodeP->blockNumber;
+		writeBlock(&block, inodeP->mem);
+		//fwrite(inodeP, sizeof(INODE), 1, dataFp);
 	}
 	else{
 		printf("文件指针偏移失败，请重新打开程序尝试，不成功则程序已崩溃……！\r\n");
@@ -64,7 +83,7 @@ void writeUser(User * userP)
 
 BOOL isDir(INODE * inodeP)
 {
-	if(inodeP->authority && _DIR_DEFINE)
+	if(inodeP->authority && _DIR_DEFINE_)
 		return TRUE;
 	else
 		return FALSE;

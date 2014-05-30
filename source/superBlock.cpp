@@ -4,6 +4,7 @@
 
 #include "tool.h"
 #include "superBlock.h"
+#include "file.h"
 
 extern User * currentUser;
 
@@ -46,9 +47,10 @@ void writeRoot(SUPER_BLOCK * superBlockP)
 {
 	//只有初始化时才会调用到这个文件，通常是调用下面的读方法
 	//inodeP的inodeNumber就是0
-	INODE * inodeP = createINODE();
-	inodeP->authority = _755_AUTHORITY_DIR_; //drwxr-xr-x
+	INODE * inodeP = createINODE(_755_AUTHORITY_DIR_); // 默认drwxr-xr-x 755
 	writeINODE(inodeP);
+
+	createFile(inodeP, "/user");
 
 	writeAddUser(currentUser, inodeP);
 }
