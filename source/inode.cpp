@@ -108,10 +108,32 @@ void freeInode(INODE * inodeP)
 	free(inodeP);
 }
 
+int getCurrentBlockNumber(INODE * inodeP)
+{
+	return ((int *)inodeP->mem)[inodeP->length / superBlockPointer->blockSize];
+}
+
 void inodeMemAddBlock(INODE * inodeP, int blockNumber)
 {
 	int * p = (int *)inodeP->mem;
-	p[inodeP->length / superBlockPointer->blockSize] = blockNumber;
+	p[inodeP->length / 4] = blockNumber;
 	//刷新磁盘
 	writeINODE(inodeP);
+}
+
+void inodeDirAddFile(INODE * inodeP, void * mem, int length)
+{
+	if(length != 32){
+		return ;
+	}
+	void * _mem = Malloc(superBlockPointer->blockSize);
+	memcpy((char*)_mem + inodeP->length, mem, 32);
+
+	//当前扇区上添加新增的文件数据。 及文件名和文件的INODE编号
+	BLOCK * blockP = getBlock(getCurrentBlockNumber(inodeP));
+	writeBlock(blockP, mem);
+	freeBlock(blockP);
+	inodeP->length += 32;
+	writeINODE(inodeP);
+	free(mem);
 }

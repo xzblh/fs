@@ -126,11 +126,6 @@ int createFile(INODE * inodeP, char * fileName)
 	if(!hasCreateFileAuthority(inodeP, currentUser)){
 		return -2;
 	}
-	INODE * tmpInodePointer = NULL;
-	char str[32];
-	memset(str, 0, 32);
-	strcpy(str, fileName);
-	BLOCK * blockP;
 	if(inodeP->length % superBlockPointer->blockSize == 0){
 		//之前分配的block刚好用完。
 		if(inodeP->length + (unsigned int)32 >= getFileSizeLimit(superBlockPointer)){
@@ -139,40 +134,79 @@ int createFile(INODE * inodeP, char * fileName)
 		}
 		else{
 			//获得为原来文件夹新增的扇区
-			blockP = createBlock();
+			BLOCK * blockP = createBlock();
 			//在原来文件夹的间接扇区上增加新增的扇区编号
-			((int*)inodeP->mem)[inodeP->length/4] = blockP->blockNumber;
+			inodeMemAddBlock(inodeP, blockP->blockNumber);
+			freeBlock(blockP);
 		}
 	}
-	else{
-		blockP = getBlock(inodeP->blockNumber);
-	}
+
 	//获得新文件的INODE
-	tmpInodePointer = createINODE(_755_AUTHORITY_FILE_);
+	INODE * tmpInodePointer = createINODE(_755_AUTHORITY_FILE_);
 
 	//把文件名和文件的INODE编号组合在32个字节里面。
+	char str[32];
+	memset(str, 0, 32);
+	strcpy(str, fileName);
 	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
-	//分配一块内存，方便写入
-	void * mem = Malloc(superBlockPointer->blockSize);
-	memcpy((char*)mem, str, 32);
+	inodeDirAddFile(inodeP, str, 32);
 
-	//在新扇区上添加新增的文件数据。 及文件名和文件的INODE编号
-	writeBlock(blockP, mem);
-	free(mem);
-	freeBlock(blockP);
-	inodeP->length += 32; //单文件名27个字符限制  27个字符+1个结束标志+4个Inode指示，总共32位。
-	writeINODE(inodeP);
 	writeINODE(tmpInodePointer);
 	return 0;
 }
 
 int createDir(INODE * inodeP, char * dirName)
 {
+	if(strlen(dirName) > 27){
+		//文件夹名长度限制 必须小于等于27，最长不能超过27
+		return -4;
+	}
 	if(!hasCreateFileAuthority(inodeP, currentUser)){
 		return -2;
 	}
-	INODE * tmp = createINODE(_755_AUTHORITY_DIR_);
+	if(!isDir(inodeP)){
+		return -1;
+	}
+
+	if(inodeP->length % superBlockPointer->blockSize == 0){
+		//之前分配的block刚好用完。
+		if(inodeP->length + (unsigned int)32 >= getFileSizeLimit(superBlockPointer)){
+			//单文件大小限制
+			return -3;
+		}
+		else{
+			//获得为原来文件夹新增的扇区
+			BLOCK * blockP = createBlock();
+			//在原来文件夹的间接扇区上增加新增的扇区编号
+			inodeMemAddBlock(inodeP, blockP->blockNumber);
+			freeBlock(blockP);
+		}
+	}
+	INODE * tmpInodePointer = createINODE(_755_AUTHORITY_DIR_);
+
+	char str[32];
+	memset(str, 0, 32);
+	strcpy(str, dirName);
+
+	//把文件名和文件的INODE编号组合在32个字节里面。
+	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
+	inodeDirAddFile(inodeP, str, 32);
+
+	//添加父文件夹节点和当前文件节点到当前文件夹
+	memset(str, 0, 32);
+	strcpy(str, "..");
+	*(unsigned int*)(str+28) = inodeP->inodeNumber;
+	inodeDirAddFile(tmpInodePointer, str, 32);
+
+	memset(str, 0, 32);
+	strcpy(str, ".");
+	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
+	inodeDirAddFile(tmpInodePointer, str, 32);
+
+	writeINODE(inodeP); //这个可以不用调用的，因为inodeDirAddFile()函数已经调用过了
+	writeINODE(tmpInodePointer);
 	return 0;
+
 }
 
 void writeAddUser(User * userP, FILE_FS * fileFsP)

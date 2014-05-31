@@ -58,4 +58,7 @@ void writeINODE(INODE * inodeP);
 void writeUser(User * userP);
 BOOL isDir(INODE * inodeP);
 void freeInode(INODE * inodeP);
+int getCurrentBlockNumber(INODE * inodeP);
 void inodeMemAddBlock(INODE * inodeP, int blockNumber);
+void inodeDirAddFile(INODE * inodeP, void * mem, int length);
+				//文件夹INODE节点中，增加文件夹或文件记录， mem长度必须是32字节。
