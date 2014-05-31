@@ -49,15 +49,13 @@ void writeRoot(SUPER_BLOCK * superBlockP)
 	//inodeP的inodeNumber就是0
 	INODE * inodeP = createINODE(_755_AUTHORITY_DIR_); // 默认drwxr-xr-x 755
 	writeINODE(inodeP);
-
-	createFile(inodeP, "/user");
-
-	writeAddUser(currentUser, inodeP);
+	superBlockP->inode = inodeP;
 }
 
 void readRoot(SUPER_BLOCK * superBlockP)
 {
-
+	INODE * inodeP = getINODE(0);//根节点的Inode号就是0
+	superBlockP->inode = inodeP;
 }
 
 int getFileSizeLimit(SUPER_BLOCK * superBlockP)
@@ -66,4 +64,12 @@ int getFileSizeLimit(SUPER_BLOCK * superBlockP)
 		return 0;
 	}
 	return superBlockP->blockSize * (superBlockP->blockSize / 4);
+}
+
+
+int getInodeAreaOffset(SUPER_BLOCK * superBlockP)
+{
+	//data.txt文件至少包含一个启动块，一个超级块，一个blockBitMap，即8块，一个InodeBitMap， 即8块。
+	//一个Inode节点区，该区大概8*512*32字节，即256个扇区。总共 1+1+8+8+256 = 274
+	return superBlockP->blockSize * (1 + 1 + superBlockP->blockBitMapCount + superBlockP->inodeBitMapCount);
 }

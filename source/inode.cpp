@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "block.h"
 #include "superBlock.h"
 #include "INODE.h"
 #include "tool.h"
@@ -23,9 +24,11 @@ INODE * createINODE(unsigned int authority)
 	inodeP->inodeNumber = inodePos;
 	inodeP->GID = currentUser->GID;
 	inodeP->UID = currentUser->UID;
-	//inodeP->cTime = now(); //当前时间
-	//inodeP->mTime = now(); //修改时间
-	//inodeP->aTime = now(); //访问时间
+	time(&inodeP->cTime); //当前时间
+	memcpy(&inodeP->mTime, &inodeP->cTime, sizeof(time_t)); //保证三个时间一致
+	memcpy(&inodeP->aTime, &inodeP->cTime, sizeof(time_t));
+	//time(&inodeP->mTime); //修改时间
+	//time(&inodeP->aTime); //访问时间
 	inodeP->authority  = authority;
 
 	BLOCK * blockP = createBlock();
@@ -35,14 +38,42 @@ INODE * createINODE(unsigned int authority)
 	return inodeP;
 }
 
+INODE * getINODE(int inodeNumber)
+{
+	INODE * inodeP = (INODE *)Malloc(sizeof(INODE));
+	inodeP->mem = Malloc(superBlockPointer->blockSize);
+	int time_tmp = 0;
+	fseek(dataFp, getInodeAreaOffset(superBlockPointer), SEEK_SET);
+	fread(&time_tmp, 4, 1, dataFp);
+	inodeP->aTime = time_tmp;
+	fread(&time_tmp, 4, 1, dataFp);
+	inodeP->cTime = time_tmp;
+	fread(&time_tmp, 4, 1, dataFp);
+	inodeP->mTime = time_tmp;
+	fread(&inodeP->GID, 4, 1, dataFp);
+	fread(&inodeP->UID, 4, 1, dataFp);
+	fread(&inodeP->authority, 4, 1, dataFp);
+	fread(&inodeP->inodeNumber, 4, 1, dataFp);
+	fread(&inodeP->blockNumber, 4, 1, dataFp);
+	fread(&inodeP->length, 4, 1, dataFp);
+	fseek(dataFp, getBlockOffset(inodeP->blockNumber), SEEK_SET);
+	fread(inodeP->mem, superBlockPointer->blockSize, 1, dataFp);
+}
+
 void writeINODE(INODE * inodeP)
 {
 	//data.txt的区块偏移， 加上INODE节点区的偏移
 	int offset = inodeP->inodeNumber * sizeof(INODE) + 17 * superBlockPointer->blockSize;
 	if(fseek(dataFp, offset, SEEK_SET) == 0){
-		fwrite(&inodeP->aTime, 4, 1, dataFp);
-		fwrite(&inodeP->cTime, 4, 1, dataFp);
-		fwrite(&inodeP->mTime, 4, 1, dataFp);
+		int time_tmp = inodeP->aTime;
+		fwrite(&time_tmp, 4, 1, dataFp);
+		//fwrite(&inodeP->aTime, 4, 1, dataFp);
+		time_tmp = inodeP->cTime;
+		fwrite(&time_tmp, 4, 1, dataFp);
+		//fwrite(&inodeP->cTime, 4, 1, dataFp);
+		time_tmp = inodeP->mTime;
+		fwrite(&time_tmp, 4, 1, dataFp);
+		//fwrite(&inodeP->mTime, 4, 1, dataFp);
 		fwrite(&inodeP->GID, 4, 1, dataFp);
 		fwrite(&inodeP->UID, 4, 1, dataFp);
 		fwrite(&inodeP->authority, 4, 1, dataFp);

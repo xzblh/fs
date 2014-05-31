@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
+#include "file.h"
 #include "tool.h"
 #include "superBlock.h"
 #include "operate.h"
@@ -107,12 +109,23 @@ void initSuperBlock()
 			strcpy(currentUser->username, "root");
 			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 256;
 			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount - 1;
+			//写起始扇区
 			writeSuperBlock(superBlockPointer, dataFp);
-			memset(superBlockPointer->bBitMap, 0xFF, 32);
-			memset((void*)((char *)(superBlockPointer->bBitMap)+32), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize -32);
+
+			//初始化超级块的数据
+			memset(superBlockPointer->bBitMap, 0xFF, 34);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+34), 0x03, 1);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+35), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize -35);
 			memset(superBlockPointer->iBitMap, 0, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
+			
+			//写bitmap结构
 			writeBitMap(superBlockPointer, dataFp);
+
+			//创建根节点，即“/”文件夹
 			writeRoot(superBlockPointer);
+			
+			createFile(superBlockPointer->inode, "/user");
+			writeAddUser(currentUser, inodeP);
 	}
 	else{
 		readBitMap(superBlockPointer, dataFp);

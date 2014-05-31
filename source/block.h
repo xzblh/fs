@@ -7,5 +7,8 @@
 
 #endif
 
+
 void writeBlock(BLOCK * blockP, void * mem);
 BLOCK * createBlock();
+BLOCK * getBlock(int blockNumber);
+int getBlockOffset(int blockNumber);

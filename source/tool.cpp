@@ -89,6 +89,7 @@ INODE * getInode(char * path) //等价于书上的NameI()
 	if(strcmp(path, "/") == 0){
 		return superBlockPointer->inode;
 	}
+
 }
 
 void writeBootSector()

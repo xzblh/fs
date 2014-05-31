@@ -19,3 +19,4 @@ int writeContent(INODE * inodeP, void * mem, int length, int offset);
 				//  确定文件INODE编号   要写的内存区  要写的内存长度    将要写的文件偏移量
 int createFile(INODE * inodeP, char * fileName);
 int createDir(INODE * inodeP, char * dirName);
+FILE_FS * openFile(char * fileName);

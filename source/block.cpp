@@ -26,3 +26,15 @@ BLOCK * createBlock()
 	blockP->blockNumber = blockPos;
 	return blockP;
 }
+
+//根据扇区编号获得扇区指针
+BLOCK * getBlock(int blockNumber)
+{
+	BLOCK * blockP = (BLOCK *)Malloc(sizeof(BLOCK));
+	return blockP;
+}
+
+int getBlockOffset(int blockNumber)
+{
+	return superBlockPointer->blockSize * blockNumber;
+}
