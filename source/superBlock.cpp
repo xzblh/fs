@@ -28,17 +28,17 @@ void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp)
 void writeBitMap(SUPER_BLOCK * superBlockP, FILE * fp)
 {
 	fseek(fp, 512*2, SEEK_SET);
-	fwrite(superBlockP->bBitMap, superBlockP->blockSize, superBlockP->blockBitMapCount, fp);
-	fwrite(superBlockP->iBitMap, superBlockP->blockSize, superBlockP->inodeBitMapCount, fp);
+	fwrite(superBlockP->bBitMap, superBlockP->blockSize / 8, superBlockP->blockBitMapCount, fp);
+	fwrite(superBlockP->iBitMap, superBlockP->blockSize / 8, superBlockP->inodeBitMapCount, fp);
 }
 
 void readBitMap(SUPER_BLOCK * superBlockP, FILE * fp)
 {
 	fseek(fp, 512*2, SEEK_SET);
-	fread(superBlockP->bBitMap, superBlockP->blockSize, superBlockP->blockBitMapCount, fp);
+	fread(superBlockP->bBitMap, superBlockP->blockSize / 8, superBlockP->blockBitMapCount, fp);
 	superBlockP->blockFreeCount = superBlockP->blockCount - countMem(superBlockP->bBitMap, 
 		superBlockP->blockBitMapCount * superBlockP->blockSize);
-	fread(superBlockP->iBitMap, superBlockP->blockSize, superBlockP->inodeBitMapCount, fp);
+	fread(superBlockP->iBitMap, superBlockP->blockSize / 8, superBlockP->inodeBitMapCount, fp);
 	superBlockP->inodeFreeCount = superBlockP->inodeCount - countMem(superBlockP->iBitMap,
 		superBlockP->inodeBitMapCount * superBlockP->blockSize);
 }
@@ -58,7 +58,7 @@ void readRoot(SUPER_BLOCK * superBlockP)
 	superBlockP->inode = inodeP;
 }
 
-int getFileSizeLimit(SUPER_BLOCK * superBlockP)
+unsigned int getFileSizeLimit(SUPER_BLOCK * superBlockP)
 {
 	if(NULL == superBlockP){
 		return 0;
@@ -72,4 +72,24 @@ int getInodeAreaOffset(SUPER_BLOCK * superBlockP)
 	//data.txt文件至少包含一个启动块，一个超级块，一个blockBitMap，即8块，一个InodeBitMap， 即8块。
 	//一个Inode节点区，该区大概8*512*32字节，即256个扇区。总共 1+1+8+8+256 = 274
 	return superBlockP->blockSize * (1 + 1 + superBlockP->blockBitMapCount + superBlockP->inodeBitMapCount);
+}
+
+unsigned int getFreeBlockNumber(SUPER_BLOCK * superBlockP)
+{
+	return findZero(superBlockP->bBitMap, getBlockBitMapByteCount(superBlockP));
+}
+
+unsigned int getFreeInodeNumber(SUPER_BLOCK * superBlockP)
+{
+	return findZero(superBlockP->iBitMap, getInodeBitMapByteCount(superBlockP));
+}
+
+unsigned int getBlockBitMapByteCount(SUPER_BLOCK * superBlockP)
+{
+	return superBlockP->blockBitMapCount * superBlockP->blockSize / 8;
+}
+
+unsigned int getInodeBitMapByteCount(SUPER_BLOCK * superBlockP)
+{
+	return superBlockP->inodeBitMapCount * superBlockP->blockSize / 8;
 }

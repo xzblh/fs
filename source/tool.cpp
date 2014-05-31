@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "file.h"
 #include "tool.h"
 #include "superBlock.h"
 
@@ -74,8 +75,18 @@ BOOL login()
 
 BOOL _login(char * username, char * password)
 {
-
-	return TRUE;
+	FILE_FS * fileFsP = openFile("/user");
+	if(fileFsP == NULL){
+		printf("无法打开用户文件，登陆失败，或者删除data.txt文件重新运行模拟程序！\r\n");
+		return FALSE;
+	}
+	User * userP = getUser(fileFsP);
+	if(strcmp(userP->username, username) == 0 && strcmp(userP->passwd, password) == 0){
+		return TRUE;
+	}
+	else{
+		return FALSE;
+	}
 }
 
 INODE * getInode(char * path) //等价于书上的NameI()
@@ -89,7 +100,7 @@ INODE * getInode(char * path) //等价于书上的NameI()
 	if(strcmp(path, "/") == 0){
 		return superBlockPointer->inode;
 	}
-
+	return NULL;
 }
 
 void writeBootSector()

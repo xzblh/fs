@@ -7,8 +7,10 @@
 
 #endif
 
-
+void initBlock(BLOCK * blockP); //往扇区写0
 void writeBlock(BLOCK * blockP, void * mem);
+void readBlock(BLOCK * blockP, void * mem);
 BLOCK * createBlock();
 BLOCK * getBlock(int blockNumber);
 int getBlockOffset(int blockNumber);
+void freeBlock(BLOCK * blockP);

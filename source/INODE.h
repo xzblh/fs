@@ -55,7 +55,6 @@
 INODE * createINODE(unsigned int authority);
 INODE * getINODE(int inodeNumber);
 void writeINODE(INODE * inodeP);
-void writeAddUser(User * userP, INODE * inodeP);
-void writeUser(User * userP, int offset);
 void writeUser(User * userP);
 BOOL isDir(INODE * inodeP);
+void freeInode(INODE * inodeP);

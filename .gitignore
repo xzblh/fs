@@ -4,6 +4,7 @@ a.out
 .cproject
 .autotools
 Debug/
+Release/
 fs/
 ipch/
 fs.sdf

@@ -97,12 +97,11 @@ void initSuperBlock()
 	//	superBlockPointer->inodeCount*superBlockPointer->inodeSize/superBlockPointer->blockSize));
 	//getchar();
 	writeBootSector();
-	superBlockPointer->bBitMap = Malloc(superBlockPointer->blockBitMapCount * superBlockPointer->blockSize / 8);
-	superBlockPointer->iBitMap = Malloc(superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize / 8);
+	superBlockPointer->bBitMap = Malloc(getBlockBitMapByteCount(superBlockPointer));
+	superBlockPointer->iBitMap = Malloc(getInodeBitMapByteCount(superBlockPointer));
 	fseek(dataFp, 0, SEEK_END);
 	int l = ftell(dataFp);
-	if(ftell(dataFp) < (superBlockPointer->blockSize * 
-		(1+1+superBlockPointer->blockBitMapCount+superBlockPointer->inodeBitMapCount ))){
+	if(ftell(dataFp) < getInodeAreaOffset(superBlockPointer) ){
 			currentUser->GID = 0;
 			currentUser->UID = 0;
 			strcpy(currentUser->passwd, "root");
@@ -125,7 +124,9 @@ void initSuperBlock()
 			writeRoot(superBlockPointer);
 			
 			createFile(superBlockPointer->inode, "/user");
-			writeAddUser(currentUser, inodeP);
+			FILE_FS * fileFsP = openFile("/user");
+			writeAddUser(currentUser, fileFsP);
+			freeFILE_FS(fileFsP);
 	}
 	else{
 		readBitMap(superBlockPointer, dataFp);

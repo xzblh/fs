@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "file.h"
 #include "block.h"
 #include "superBlock.h"
 #include "INODE.h"
@@ -19,7 +20,7 @@ extern User * currentUser;
 /************************************************************************/
 INODE * createINODE(unsigned int authority)
 {
-	int inodePos = findZero(superBlockPointer->iBitMap, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize / 8);
+	int inodePos = findZero(superBlockPointer->iBitMap, getInodeBitMapByteCount(superBlockPointer));
 	INODE * inodeP = (INODE*)Malloc(sizeof(INODE));
 	inodeP->inodeNumber = inodePos;
 	inodeP->GID = currentUser->GID;
@@ -58,6 +59,7 @@ INODE * getINODE(int inodeNumber)
 	fread(&inodeP->length, 4, 1, dataFp);
 	fseek(dataFp, getBlockOffset(inodeP->blockNumber), SEEK_SET);
 	fread(inodeP->mem, superBlockPointer->blockSize, 1, dataFp);
+	return inodeP;
 }
 
 void writeINODE(INODE * inodeP)
@@ -91,31 +93,16 @@ void writeINODE(INODE * inodeP)
 	}
 }
 
-void writeAddUser(User * userP, INODE * inodeP)
-{
-	writeUser(userP, inodeP->blockNumber * superBlockPointer->blockSize + inodeP->length);
-}
-
-void writeUser(User * userP, int offset)
-{
-	fseek(dataFp, offset, SEEK_SET);
-	writeUser(userP);
-}
-
-void writeUser(User * userP)
-{
-	fwrite(&(userP->UID), sizeof(userP->UID), 1, dataFp);
-	fwrite(&(userP->GID), sizeof(userP->GID), 1, dataFp);
-	fwrite(userP->username, strlen(userP->username), 1, dataFp);
-	fwrite(userP->passwd, strlen(userP->passwd), 1, dataFp);
-	char line[] = "\r\n";
-	fwrite(line, strlen(line), 1, dataFp);
-}
-
 BOOL isDir(INODE * inodeP)
 {
 	if(inodeP->authority && _DIR_DEFINE_)
 		return TRUE;
 	else
 		return FALSE;
+}
+
+void freeInode(INODE * inodeP)
+{
+	free(inodeP->mem);
+	free(inodeP);
 }
