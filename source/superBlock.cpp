@@ -14,8 +14,7 @@ void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp)
 	int l = sizeof(time_t);
 	if(result == 0){
 		//fwrite(&(superBlockP->blockCount), 4, 1, dataFp);
-		fwrite(superBlockP, sizeof(SUPER_BLOCK) - 8, 1, fp);
-		fflush(fp);
+		Fwrite(superBlockP, sizeof(SUPER_BLOCK) - 8, 1, fp);
 		/*fprintf(dataFp, "%d", superBlockP->blockCount);*/
 	}
 	else if(result == 0){
@@ -28,8 +27,8 @@ void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp)
 void writeBitMap(SUPER_BLOCK * superBlockP, FILE * fp)
 {
 	fseek(fp, 512*2, SEEK_SET);
-	fwrite(superBlockP->bBitMap, superBlockP->blockSize / 8, superBlockP->blockBitMapCount, fp);
-	fwrite(superBlockP->iBitMap, superBlockP->blockSize / 8, superBlockP->inodeBitMapCount, fp);
+	Fwrite(superBlockP->bBitMap, superBlockP->blockSize / 8, superBlockP->blockBitMapCount, fp);
+	Fwrite(superBlockP->iBitMap, superBlockP->blockSize / 8, superBlockP->inodeBitMapCount, fp);
 }
 
 void readBitMap(SUPER_BLOCK * superBlockP, FILE * fp)

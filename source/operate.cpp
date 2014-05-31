@@ -2,6 +2,8 @@
 
 void CD(char ** cmds) //get into foler
 {
+	//先实现最简单的使用
+	//使用形式 必须是，小写：cd folder
 
 }
 void TOUCH(char ** cmds) //create file

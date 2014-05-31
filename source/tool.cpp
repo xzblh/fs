@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "dentry.h"
 #include "file.h"
 #include "tool.h"
 #include "superBlock.h"
@@ -28,6 +29,10 @@ char ** parse(char * s)
 		_tmp = strtok(NULL, " ");
 		i++;
 	}
+	if(i == 1){
+		free(p);
+		return NULL;
+	}
 	return p;
 }
 
@@ -39,7 +44,16 @@ void * Malloc(unsigned int Size_t)
 		printf("内存申请失败！\r\n");
 		exit(-3);
 	}
+	memset(_p, 0, Size_t);
 	return _p;
+}
+
+int Fwrite(void * mem, size_t size, size_t count, FILE * fp)
+{
+	//为了调试立马看结果……不知道FILE对象的缓冲在哪
+	int retCount = fwrite(mem, size, count, fp);
+	fflush(fp);
+	return retCount;
 }
 
 char * ltrim(char * s, char c)
@@ -100,7 +114,37 @@ INODE * getInode(char * path) //等价于书上的NameI()
 	if(strcmp(path, "/") == 0){
 		return superBlockPointer->inode;
 	}
-	return NULL;
+	INODE * inodeP = superBlockPointer->inode;
+	char * s = strtok(path+1, "/");
+	int inodeNumber;
+	FILE_FS * fileFsP = NULL;
+	BOOL flag = TRUE;
+	while(TRUE){
+		if(s == NULL){
+			break;
+		}
+		else{
+			fileFsP = createFILE_FS(inodeP);
+			inodeNumber = getFileInodeInFolder(fileFsP, s);
+			if(inodeNumber){
+				INODE * tmp = inodeP;
+				inodeP = getINODE(inodeNumber);
+				if(flag){
+					flag = FALSE;
+				}
+				else{
+					freeInode(tmp);
+					freeFILE_FS(fileFsP);
+				}
+			}
+			else{
+				freeFILE_FS(fileFsP);
+				return NULL;
+			}
+		}
+		s = strtok(NULL, "/");
+	}
+	return inodeP;
 }
 
 void writeBootSector()
@@ -108,12 +152,12 @@ void writeBootSector()
 	char spaces[] = "boot sector ";
 	int i = 0;
 	while(i<(512/sizeof(spaces))){
-		fwrite(spaces,sizeof(spaces), 1,dataFp);
+		Fwrite(spaces,sizeof(spaces), 1,dataFp);
 		i++;
 	}
 	i = 0;
 	while(i< (512%sizeof(spaces))){
-		fwrite(" ",1, 1,dataFp);
+		Fwrite(" ",1, 1,dataFp);
 		i++;
 	}
 }
@@ -192,12 +236,13 @@ BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
 		return FALSE;
 }
 
-void writeNull(int count, FILE * fp)
+void writeNull(unsigned int count, FILE * fp)
 {
 	char c = 0;
 	int i = 0;
 	while(i < count){
 		fwrite(&c, 1, 1, fp);
+		i++;
 	}
 }
 

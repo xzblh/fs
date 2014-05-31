@@ -28,11 +28,16 @@ void run()
 
 	while (TRUE)
 	{
-		n = scanf("%[^\n]", command);
+		n = scanf("%15[^\n]", command);
+		getchar();
 		if (n < 1){
 			continue;
 		}
 		cmds = parse(command);
+		if(cmds == NULL){
+			printf("params number is not right!\r\n");
+			continue;
+		}
 		if (strcmp(cmds[0], "cd") == 0){
 			//进入目录
 			CD(cmds);
@@ -90,7 +95,7 @@ void initSuperBlock()
 	superBlockPointer->inodeBitMapCount = 8;
 	superBlockPointer->inodeBitMapStart = superBlockPointer->blockBitMapStart + superBlockPointer->blockBitMapCount;
 	//从上，可以看出data.txt文件至少包含一个启动块，一个超级块，一个blockBitMap，即8块，一个InodeBitMap， 即8块。
-	//一个Inode节点区，该区大概8*512*32字节，即256个扇区。总共 1+1+8+8+256 = 274
+	//一个Inode节点区，该区大概8*512*64字节，即512个扇区。总共 1+1+8+8+512 = 530
 
 	//printf("%d\r\n", 
 	//	(1+1+superBlockPointer->blockBitMapCount+superBlockPointer->inodeBitMapCount + 
@@ -102,29 +107,35 @@ void initSuperBlock()
 	fseek(dataFp, 0, SEEK_END);
 	int l = ftell(dataFp);
 	if(ftell(dataFp) < getInodeAreaOffset(superBlockPointer) ){
+			//初始化文件系统 如创建根文件夹，初始化用户等
+
 			currentUser->GID = 0;
 			currentUser->UID = 0;
 			strcpy(currentUser->passwd, "root");
 			strcpy(currentUser->username, "root");
-			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 256;
-			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount - 1;
+			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 530;
+			superBlockPointer->inodeFreeCount = superBlockPointer->inodeCount;
 			//写起始扇区
 			writeSuperBlock(superBlockPointer, dataFp);
 
 			//初始化超级块的数据
-			memset(superBlockPointer->bBitMap, 0xFF, 34);
-			memset((void*)((char *)(superBlockPointer->bBitMap)+34), 0x03, 1);
-			memset((void*)((char *)(superBlockPointer->bBitMap)+35), 0, superBlockPointer->blockBitMapCount * superBlockPointer->blockSize -35);
-			memset(superBlockPointer->iBitMap, 0, superBlockPointer->inodeBitMapCount * superBlockPointer->blockSize);
-			
+			memset(superBlockPointer->bBitMap, 0xFF, 66);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+66), 0x03, 1);
+			memset((void*)((char *)(superBlockPointer->bBitMap)+67), 0, getBlockBitMapByteCount(superBlockPointer) -67);
+			memset(superBlockPointer->iBitMap, 0, getInodeBitMapByteCount(superBlockPointer));
+
 			//写bitmap结构
 			writeBitMap(superBlockPointer, dataFp);
 
 			//创建根节点，即“/”文件夹
 			writeRoot(superBlockPointer);
 			
-			createFile(superBlockPointer->inode, "/user");
+			createFile(superBlockPointer->inode, "user");
 			FILE_FS * fileFsP = openFile("/user");
+			if(fileFsP == NULL){
+				printf("can not open file: /user\r\n");
+				exit(0);
+			}
 			writeAddUser(currentUser, fileFsP);
 			freeFILE_FS(fileFsP);
 	}
@@ -138,9 +149,9 @@ int main()
 {
 	//进行登陆检查
 	
-	dataFp = fopen(dataFileName, "r+");
+	dataFp = fopen(dataFileName, "rb+");
 	if(NULL == dataFp){
-		dataFp = fopen(dataFileName, "w+");
+		dataFp = fopen(dataFileName, "wb+");
 	}
 
 	currentUser = (User*)Malloc(sizeof(User));

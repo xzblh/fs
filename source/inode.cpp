@@ -22,6 +22,7 @@ INODE * createINODE(unsigned int authority)
 {
 	int inodePos = findZero(superBlockPointer->iBitMap, getInodeBitMapByteCount(superBlockPointer));
 	INODE * inodeP = (INODE*)Malloc(sizeof(INODE));
+	inodeP->mem = Malloc(superBlockPointer->blockSize);
 	inodeP->inodeNumber = inodePos;
 	inodeP->GID = currentUser->GID;
 	inodeP->UID = currentUser->UID;
@@ -34,7 +35,7 @@ INODE * createINODE(unsigned int authority)
 
 	BLOCK * blockP = createBlock();
 	inodeP->blockNumber = blockP->blockNumber;
-	free(blockP);
+	freeBlock(blockP);
 	inodeP->length = 0;
 	return inodeP;
 }
@@ -44,7 +45,7 @@ INODE * getINODE(int inodeNumber)
 	INODE * inodeP = (INODE *)Malloc(sizeof(INODE));
 	inodeP->mem = Malloc(superBlockPointer->blockSize);
 	int time_tmp = 0;
-	fseek(dataFp, getInodeAreaOffset(superBlockPointer), SEEK_SET);
+	fseek(dataFp, getInodeAreaOffset(superBlockPointer) + inodeNumber * superBlockPointer->inodeSize, SEEK_SET);
 	fread(&time_tmp, 4, 1, dataFp);
 	inodeP->aTime = time_tmp;
 	fread(&time_tmp, 4, 1, dataFp);
@@ -65,23 +66,23 @@ INODE * getINODE(int inodeNumber)
 void writeINODE(INODE * inodeP)
 {
 	//data.txt的区块偏移， 加上INODE节点区的偏移
-	int offset = inodeP->inodeNumber * sizeof(INODE) + 17 * superBlockPointer->blockSize;
+	int offset = inodeP->inodeNumber * superBlockPointer->inodeSize + getInodeAreaOffset(superBlockPointer);
 	if(fseek(dataFp, offset, SEEK_SET) == 0){
 		int time_tmp = inodeP->aTime;
-		fwrite(&time_tmp, 4, 1, dataFp);
+		Fwrite(&time_tmp, 4, 1, dataFp);
 		//fwrite(&inodeP->aTime, 4, 1, dataFp);
 		time_tmp = inodeP->cTime;
-		fwrite(&time_tmp, 4, 1, dataFp);
+		Fwrite(&time_tmp, 4, 1, dataFp);
 		//fwrite(&inodeP->cTime, 4, 1, dataFp);
 		time_tmp = inodeP->mTime;
-		fwrite(&time_tmp, 4, 1, dataFp);
+		Fwrite(&time_tmp, 4, 1, dataFp);
 		//fwrite(&inodeP->mTime, 4, 1, dataFp);
-		fwrite(&inodeP->GID, 4, 1, dataFp);
-		fwrite(&inodeP->UID, 4, 1, dataFp);
-		fwrite(&inodeP->authority, 4, 1, dataFp);
-		fwrite(&inodeP->inodeNumber, 4, 1, dataFp);
-		fwrite(&inodeP->blockNumber, 4, 1, dataFp);
-		fwrite(&inodeP->length, 4, 1, dataFp);
+		Fwrite(&inodeP->GID, 4, 1, dataFp);
+		Fwrite(&inodeP->UID, 4, 1, dataFp);
+		Fwrite(&inodeP->authority, 4, 1, dataFp);
+		Fwrite(&inodeP->inodeNumber, 4, 1, dataFp);
+		Fwrite(&inodeP->blockNumber, 4, 1, dataFp);
+		Fwrite(&inodeP->length, 4, 1, dataFp);
 		BLOCK block;
 		block.blockNumber = inodeP->blockNumber;
 		writeBlock(&block, inodeP->mem);
@@ -105,4 +106,12 @@ void freeInode(INODE * inodeP)
 {
 	free(inodeP->mem);
 	free(inodeP);
+}
+
+void inodeMemAddBlock(INODE * inodeP, int blockNumber)
+{
+	int * p = (int *)inodeP->mem;
+	p[inodeP->length / superBlockPointer->blockSize] = blockNumber;
+	//刷新磁盘
+	writeINODE(inodeP);
 }

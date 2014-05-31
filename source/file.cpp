@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "block.h"
-#include "block.h"
 #include "superBlock.h"
 #include "file.h"
 #include "tool.h"
@@ -35,15 +34,26 @@ int writeContent(INODE * inodeP, void * mem, int length, int offset)
 	}
 	int l = ftell(dataFp);
 	fseek(dataFp, inodeP->blockNumber * superBlockPointer->blockSize, SEEK_SET);
-	fwrite(mem, length, 1, dataFp);
+	Fwrite(mem, length, 1, dataFp);
 	fseek(dataFp, l, SEEK_SET);
 	return 0;
 }
 
 int writeFileContent(FILE_FS * fileFsP) //刷新缓存到扇区  类似于正常文件系统中的磁盘同步操作
+										//还应该进行文件大小检查等操作
 {
 	int blockNumber = getCurrentBlockNumber(fileFsP);
-	BLOCK * blockP = getBlock(blockNumber);
+	BLOCK * blockP = NULL;
+	if(NULL == blockNumber){
+		blockNumber = getFreeBlockNumber(superBlockPointer);
+		blockP = getBlock(blockNumber);
+		//INODE增加分配的扇区的记录
+		inodeMemAddBlock(fileFsP->inodeP, blockNumber);
+		initBlock(blockP);
+	}
+	else{
+		blockP = getBlock(blockNumber);
+	}
 	writeBlock(blockP, fileFsP->mem);
 	free(blockP);
 	return 0;
@@ -56,6 +66,8 @@ int readFileContent(FILE_FS * fileFsP)
 	if(NULL == blockNumber){
 		blockNumber = getFreeBlockNumber(superBlockPointer);
 		blockP = getBlock(blockNumber);
+		//INODE增加分配的扇区的记录
+		inodeMemAddBlock(fileFsP->inodeP, blockNumber);
 		initBlock(blockP);
 	}
 	else{
@@ -139,14 +151,14 @@ int createFile(INODE * inodeP, char * fileName)
 	tmpInodePointer = createINODE(_755_AUTHORITY_FILE_);
 
 	//把文件名和文件的INODE编号组合在32个字节里面。
-	*(unsigned int*)(str+28) = blockP->blockNumber;
+	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
 	//分配一块内存，方便写入
 	void * mem = Malloc(superBlockPointer->blockSize);
-	memset(mem, 0, superBlockPointer->blockSize);
-	strcpy((char*)mem, str);
+	memcpy((char*)mem, str, 32);
 
 	//在新扇区上添加新增的文件数据。 及文件名和文件的INODE编号
 	writeBlock(blockP, mem);
+	free(mem);
 	freeBlock(blockP);
 	inodeP->length += 32; //单文件名27个字符限制  27个字符+1个结束标志+4个Inode指示，总共32位。
 	writeINODE(inodeP);
@@ -166,6 +178,7 @@ int createDir(INODE * inodeP, char * dirName)
 void writeAddUser(User * userP, FILE_FS * fileFsP)
 {
 	char str[512];
+	memset(str, 0, 512);
 	sprintf(str, "%d %d %s %s\r\n", userP->UID, userP->GID, userP->username, userP->passwd);
 	writeFileBuffer(fileFsP, str, strlen(str));
 	//fwrite(&(userP->UID), sizeof(userP->UID), 1, dataFp);
@@ -185,7 +198,7 @@ User * getUser(FILE_FS * fileFsP)
 	User * userP = (User *)Malloc(sizeof(User));
 	userP->username = (char *)Malloc(16);
 	userP->passwd = (char *)Malloc(16);
-	sscanf(buff, "%d %d %s %s\r\n", userP->UID, userP->GID, userP->username, userP->passwd);
+	sscanf(buff, "%d %d %s %s\r\n", &userP->UID, &userP->GID, userP->username, userP->passwd);
 	return userP;
 }
 
@@ -213,6 +226,18 @@ FILE_FS * openFile(char * fileName)
 	return fileFsP;
 }
 
+FILE_FS * createFILE_FS(INODE* inodeP)
+{
+	if(inodeP == NULL){
+		return NULL;
+	}
+	FILE_FS * fileFsP = (FILE_FS *)Malloc(sizeof(FILE_FS));
+	fileFsP->mem = Malloc(superBlockPointer->blockSize);
+	fileFsP->inodeP = inodeP;
+	readFileContent(fileFsP);
+	return fileFsP;
+}
+
 void * getLine(FILE_FS * fileFsP, void * mem)
 {
 	if(NULL == mem){
@@ -223,12 +248,13 @@ void * getLine(FILE_FS * fileFsP, void * mem)
 	char c = NULL;
 	while(TRUE){
 		c = getc_FS(fileFsP);
-		if(c != '\r' || c != '\n'){
-			str[i++];
+		if(c != '\r' && c != '\n'){
+			str[i++] = c;
 		}
 		else{
 			str[i++] = '\r';
 			str[i++] = '\n';
+			str[i++] = '\0';
 			break;
 		}
 	}
@@ -251,4 +277,33 @@ void freeFILE_FS(FILE_FS * fileFsP)
 	freeInode(fileFsP->inodeP);
 	free(fileFsP->mem);
 	free(fileFsP);
+}
+
+int fseekFs(FILE_FS * fileFsP, unsigned int offset)
+{
+	if(offset > fileFsP->inodeP->length){
+		return -1;
+	}
+	fileFsP->offset = offset;
+	readFileContent(fileFsP);
+}
+
+
+int getFileInodeInFolder(FILE_FS * fileFsP, char * fileName)
+{
+	if(fileFsP == NULL){
+		return NULL;
+	}
+	char str[32];
+	int pos = 0;
+	fseekFs(fileFsP, 0);
+	char * src = (char *)fileFsP->mem;
+	while(pos < fileFsP->inodeP->length){
+		memcpy(str, src + (pos%superBlockPointer->blockSize), 32);
+		if(strcmp(str, fileName) == 0){
+			return *(int *)(str+28);
+		}
+		pos += 32;
+	}
+	return NULL;
 }

@@ -23,6 +23,7 @@ typedef struct _user{
 
 char ** parse(char * s);
 void * Malloc(unsigned int Size_t);
+int Fwrite(void * mem, size_t size, size_t count, FILE * fp);
 char * ltrim(char * s, char c);
 BOOL login();
 BOOL _login(char * username, char * password);
@@ -32,6 +33,5 @@ int countMem(void * mem, int length);
 int countChar(unsigned char ch);
 int findZero(void * mem, int length);
 BOOL hasCreateFileAuthority(INODE * inodeP, User * userP);
-void writeNull(int count, FILE * fp);
-void writeChar(char * s, int count, FILE * fp); //把某个字符写到文件当前位置count次
-
+void writeNull(unsigned int count, FILE * fp);
+void writeChar(char * s, int count, FILE * fp);  //把某个字符写到文件当前位置count次

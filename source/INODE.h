@@ -58,3 +58,4 @@ void writeINODE(INODE * inodeP);
 void writeUser(User * userP);
 BOOL isDir(INODE * inodeP);
 void freeInode(INODE * inodeP);
+void inodeMemAddBlock(INODE * inodeP, int blockNumber);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "tool.h"
 #include "block.h"
 #include "superBlock.h"
 
@@ -20,7 +21,7 @@ void writeBlock(BLOCK * blockP, void * mem)
 		return ;
 	}
 	fseek(dataFp, getBlockOffset(blockP->blockNumber), SEEK_SET);
-	fwrite(mem, superBlockPointer->blockSize, 1, dataFp);
+	Fwrite(mem, superBlockPointer->blockSize, 1, dataFp);
 }
 
 void readBlock(BLOCK * blockP, void * mem)
@@ -45,6 +46,7 @@ BLOCK * createBlock()
 BLOCK * getBlock(int blockNumber)
 {
 	BLOCK * blockP = (BLOCK *)Malloc(sizeof(BLOCK));
+	blockP->blockNumber = blockNumber;
 	return blockP;
 }
 
