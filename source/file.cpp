@@ -119,6 +119,17 @@ void writeFileBuffer(FILE_FS * fileFsP, char * s)
 	}
 }
 
+BOOL updateFileBuffer(FILE_FS * fileFsP, void * mem, unsigned int length, unsigned int pos)
+{
+	if(pos > superBlockPointer->blockSize || length > superBlockPointer->blockSize){
+		return FALSE;
+	}
+	char * tMem = (char *)fileFsP->mem;
+	memcpy(tMem + pos, mem, length);
+	writeFileContent(fileFsP);
+	return TRUE;
+}
+
 int writeFileBuffer(FILE_FS * fileFsP, void * mem, int length)
 {
 	unsigned int pos = fileFsP->offset % 512;
@@ -183,10 +194,63 @@ int createFile(INODE * inodeP, char * fileName)
 
 int removeFile(INODE * inodeP)
 {
-
-
+	//释放所有扇区
+	int number = NULL;
+	int pos = 0;
+	int * numberP = (int *)inodeP->mem;
+	while(TRUE){
+		number = numberP[pos++];
+		if(number != NULL){
+			setFreeBlockNumber(superBlockPointer, number);
+		}
+		else{
+			break;
+		}
+	}
+	setFreeBlockNumber(superBlockPointer, inodeP->blockNumber);
+	//释放Inode节点
 	setFreeInodeNumber(superBlockPointer, inodeP->inodeNumber);
 	return 0;
+}
+
+int removeFile(INODE * inodeP, char * fileName)
+{
+	if(fileName == NULL){
+		printf("param fileName is not valid!\r\n");
+		return -4;
+	}
+	FILE_FS * fileFsP = openFile(fileName);
+	if(fileFsP == NULL){
+		printf("no such file:%s\r\n", fileName);
+		return -3;
+	}
+	if(!isFile(fileFsP->inodeP)){
+		freeFILE_FS(fileFsP);
+		printf("%s is not a file!\r\n", fileName);
+		return -1; //要删除的不是文件
+	}
+	//释放这个文件占用的inode和block编号
+	removeFile(fileFsP->inodeP);
+
+	//从inodeP这个文件夹里面删除fileName的记录
+	char str[32];
+	memset(str, 0, 32);
+	FILE_FS * dirFsP = createFILE_FS(inodeP);
+	fseekFs(dirFsP, 0);
+	while(getContent_FS(dirFsP, str, 32)  == 32){
+		if(strcmp(str, fileName) == 0 && *(int *)(str+28) == fileFsP->inodeP->inodeNumber){
+			fseekFs(dirFsP, dirFsP->offset - 32);
+			memset(str, 0, 32);
+			updateFileBuffer(dirFsP, str, 32, dirFsP->offset % superBlockPointer->blockSize);
+			freeFILE_FS(fileFsP);
+			freeFILE_FS(dirFsP);
+			return 0;
+		}
+	}
+	freeFILE_FS(fileFsP);
+	free(dirFsP->mem);
+	free(dirFsP);
+	return -2;
 }
 
 int createDir(INODE * inodeP, char * dirName)
@@ -253,9 +317,84 @@ int createDir(INODE * inodeP, char * dirName)
 
 }
 
-int removeDir(INODE * inodeP)
+int removeRecordFromDir(FILE_FS * dirFsP, char * fileName)
 {
+	if(dirFsP == NULL || fileName == NULL || !isDir(dirFsP->inodeP)){
+		return -1;
+	}
+	//从dirFsP这个文件夹里面删除fileName的记录
+	char str[32];
+	memset(str, 0, 32);
+	fseekFs(dirFsP, 0);
+	while(getContent_FS(dirFsP, str, 32)  == 32){
+		if(strcmp(str, fileName) == 0 ){
+			fseekFs(dirFsP, dirFsP->offset - 32);
+			memset(str, 0, 32);
+			updateFileBuffer(dirFsP, str, 32, dirFsP->offset % superBlockPointer->blockSize);
+			return 0;
+		}
+	}
+	return 0;
+}
 
+int removeDir(INODE * inodeP, char * dirName)
+{
+	if(dirName == NULL){
+		printf("param is not valid!\r\n");
+		return -5;
+	}
+	FILE_FS * delDirFsP = openFile(dirName);
+	if(delDirFsP == NULL){
+		printf("no such directory:%s!\r\n", dirName);
+		return -4;
+	}
+	if(!isDir(delDirFsP->inodeP)){
+		freeFILE_FS(delDirFsP);
+		printf("%s is not a directory!\r\n", dirName);
+		return -1; //要删除的不是一个目录
+	}
+
+	//保存工作目录
+	char pwdStore[256];
+	strcpy(pwdStore, currentPwd);
+
+	char tmpStr[32];
+	strcpy(tmpStr, currentPwd);
+	char str[32];
+	memset(str, 0, 32);
+	FILE_FS * upperDirFsP = createFILE_FS(inodeP);
+	fseekFs(upperDirFsP, 0);
+	while(getContent_FS(upperDirFsP, str, 32)  == 32){
+		strcat(currentPwd, str);
+		FILE_FS * deleteFileFsP = openFile(currentPwd);
+		if(deleteFileFsP == NULL){
+			continue;
+		}
+		if(isDir(deleteFileFsP->inodeP)){
+			if(strcmp(str, "..") == 0){
+				free(deleteFileFsP->mem);
+				free(deleteFileFsP);
+				continue;
+			}
+			removeDir(delDirFsP->inodeP, str);
+		}
+		else{
+			removeFile(delDirFsP->inodeP, str);
+		}
+		free(deleteFileFsP->mem);
+		free(deleteFileFsP);
+	}
+
+	//从上层目录删除这个文件夹的记录
+	removeRecordFromDir(upperDirFsP, dirName);
+
+	freeFILE_FS(delDirFsP);
+	free(upperDirFsP->mem);
+	free(upperDirFsP);
+
+	//恢复工作目录
+	strcpy(currentPwd, pwdStore);
+	return 0;
 
 	setFreeInodeNumber(superBlockPointer, inodeP->inodeNumber);
 	return 0;
@@ -290,6 +429,9 @@ User * getUser(FILE_FS * fileFsP)
 
 FILE_FS * openFile(char * fileName)
 {
+
+	char pwdStore[256];
+	strcpy(pwdStore, currentPwd);
 	if(NULL == fileName){
 		return NULL;
 	}
@@ -301,14 +443,24 @@ FILE_FS * openFile(char * fileName)
 	}
 	else{
 		strcpy(path, currentPwd);
+		int length = strlen(currentPwd);
+		if(currentPwd[length-1] != '/'){
+			strcat(path, "/");
+		}
 		strcat(path, fileName);
 		fileFsP->inodeP = getInode(path);
 	}
 	if(fileFsP->inodeP == NULL){
+		strcpy(currentPwd, pwdStore);
 		return NULL;
 	}
 	fileFsP->offset = 0;
 	readFileContent(fileFsP);
+
+	//复制内存不行，之间的数据关系还在，依然会被释放掉，导致访问错误
+	//INODE * bakInodeP = copyINODE(fileFsP->inodeP);
+	//fileFsP->inodeP = bakInodeP;
+	strcpy(currentPwd, pwdStore);
 	return fileFsP;
 }
 

@@ -54,6 +54,7 @@
 
 INODE * createINODE(unsigned int authority);
 INODE * getINODE(int inodeNumber);
+INODE * copyINODE(INODE * inodeP);
 void writeINODE(INODE * inodeP);
 void writeINODEData(INODE * inodeP, char c);
 void writeINODEData(INODE * inodeP, char c, unsigned int offset);

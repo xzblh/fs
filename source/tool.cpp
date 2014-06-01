@@ -130,7 +130,8 @@ INODE * getInode(char * path) //等价于书上的NameI()
 				}
 				else{
 					freeInode(tmp);
-					freeFILE_FS(fileFsP);
+					free(fileFsP->mem);
+					free(fileFsP);
 				}
 			}
 			else{
@@ -138,7 +139,8 @@ INODE * getInode(char * path) //等价于书上的NameI()
 					flag = FALSE;
 				}
 				else{
-					freeFILE_FS(fileFsP);
+					free(fileFsP->mem);
+					free(fileFsP);
 				}
 				return NULL;
 			}
@@ -290,5 +292,27 @@ void writeChar(char * s, int count, FILE * fp) //把某个字符写到文件当�
 	int i = 0;
 	while(i < count){
 		fwrite(s, strlen(s), 1, fp);
+	}
+}
+
+void * pathCat(char * path, char * path2)
+{
+	if(path == NULL || path2 == NULL){
+		return NULL;
+	}
+	if(strcmp(path, "/") == 0){
+		strcat(path, path2);
+		return path;
+	}
+	else{
+		int length = strlen(path);
+		if(path[length-1] == '/'){
+			strcat(path, path2);
+		}
+		else{
+			strcat(path, "/");
+			strcat(path, path2);
+		}
+		return path;
 	}
 }

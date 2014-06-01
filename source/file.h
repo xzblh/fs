@@ -20,12 +20,15 @@ int writeContent(INODE * inodeP, void * mem, int length, int offset);
 int writeFileContent(FILE_FS * fileFsP);
 int readFileContent(FILE_FS * fileFsP);
 void writeFileBuffer(FILE_FS * fileFsP, char * s);
+BOOL updateFileBuffer(FILE_FS * fileFsP, void * mem, unsigned int length, unsigned int pos);
 int writeFileBuffer(FILE_FS * fileFsP, void * mem, int length);
 //void readFileBuffer(FILE_FS * fileFsP); //这个函数好像同readFileContent()功能差不多
 int createFile(INODE * inodeP, char * fileName);
 int removeFile(INODE * inodeP);
+int removeFile(INODE * inodeP, char * fileName);
 int createDir(INODE * inodeP, char * dirName);
-int removeDir(INODE * inodeP);
+int removeRecordFromDir(FILE_FS * dirFsP, char * fileName);
+int removeDir(INODE * inodeP, char * dirName);
 void writeAddUser(User * userP, FILE_FS * fileFsP);
 User * getUser(FILE_FS * fileFsP);
 FILE_FS * openFile(char * fileName);

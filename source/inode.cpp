@@ -64,6 +64,16 @@ INODE * getINODE(int inodeNumber)
 	return inodeP;
 }
 
+INODE * copyINODE(INODE * inodeP)
+{
+	INODE * r = (INODE * )Malloc(sizeof(INODE));
+	void * mem = Malloc(superBlockPointer->blockSize);
+	r->mem = mem;
+	memcpy(r, inodeP, sizeof(INODE));
+	memcpy(mem, inodeP->mem, superBlockPointer->blockSize);
+	return r;
+}
+
 void writeINODE(INODE * inodeP)
 {
 	//data.txt的区块偏移， 加上INODE节点区的偏移

@@ -101,12 +101,14 @@ int setFreeBlockNumber(SUPER_BLOCK * superBlockP, int pos)
 {
 	setZero(superBlockP->bBitMap, getBlockBitMapByteCount(superBlockP), pos);
 	writeBitMap(superBlockP, dataFp);
+	return 0;
 }
 
 int setFreeInodeNumber(SUPER_BLOCK * superBlockP, int pos)
 {
 	setZero(superBlockP->iBitMap, getInodeBitMapByteCount(superBlockP), pos);
 	writeBitMap(superBlockP, dataFp);
+	return 0;
 }
 
 unsigned int getFreeBlockNumber(SUPER_BLOCK * superBlockP)

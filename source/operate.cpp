@@ -44,7 +44,7 @@ void CD(char ** cmds) //get into foler
 			if(inodeNumber != 0){
 				INODE * tmpInode = getINODE(inodeNumber);
 				if(isDir(tmpInode) ){
-					strcat(currentPwd, cmds[1]);
+					pathCat(currentPwd, cmds[1]);
 					printf("Current Dir:%s\r\n", currentPwd);
 				}
 				else{
@@ -71,6 +71,7 @@ void TOUCH(char ** cmds) //create file
 		FILE_FS *fileFsP = openFile(currentPwd);
 		if(getFileInodeInFolder(fileFsP, cmds[1])){
 			printf("%s is exist!\r\n", cmds[1]);
+			return;
 		}
 		int result = createFile(fileFsP->inodeP, cmds[1]);
 		switch(result){
@@ -97,7 +98,13 @@ void TOUCH(char ** cmds) //create file
 
 void RM(char ** cmds) //remove file
 {
-
+	if(cmds[1] == NULL){
+		return ;
+	}
+	else{
+		FILE_FS * fieFsP = openFile(currentPwd);
+		removeFile(fieFsP->inodeP, cmds[1]);
+	}
 }
 
 void MKDIR(char ** cmds) //create folder
@@ -142,7 +149,13 @@ void MKDIR(char ** cmds) //create folder
 
 void RMDIR(char ** cmds) //remove folder
 {
-
+	if(cmds[1] == NULL){
+		return ;
+	}
+	else{
+		FILE_FS * fieFsP = openFile(currentPwd);
+		removeDir(fieFsP->inodeP, cmds[1]);
+	}
 }
 
 void LS(char ** cmds) //list files attributes
@@ -165,13 +178,23 @@ void LS(char ** cmds) //list files attributes
 	while(pos < length){
 		memcpy(str, mem + pos, 32);
 		inodeNumber = *(int *)(str + 28);
-		tmpInode = getINODE(inodeNumber);
+		pos += 32;
+		if(inodeNumber != 0){
+			tmpInode = getINODE(inodeNumber);
+		}
+		else{
+			if(strcmp(str, ".") == 0 || strcmp(str, "..") == 0){
+				tmpInode = getINODE(inodeNumber);
+			}
+			else{
+				continue;
+			}
+		}
 		printf("%d\t", tmpInode->inodeNumber);
 		printInode(tmpInode);
 		printf("%s", str);
 		printf("\r\n");
 		freeInode(tmpInode);
-		pos += 32;
 	}
 	if(fileFsP->inodeP != superBlockPointer->inode){
 		freeFILE_FS(fileFsP);
@@ -185,20 +208,25 @@ void WRITE(char ** cmds) //write file
 		return;
 	}
 	else{
-		if(getFileInodeInFolder(cmds[1]) == 0){
-			printf("No such File!");
+		FILE_FS * currentDir = openFile(currentPwd);
+		if(getFileInodeInFolder(currentDir, cmds[1]) == 0){
+			freeFILE_FS(currentDir);
+			printf("No such File!\r\n");
 			return;
 		}
+		free(currentDir->mem);
+		free(currentDir);
 		FILE_FS * fileFsP = openFile(cmds[1]);
-		if(!isFile(fileFsP->inodeP)){
+		if(fileFsP == NULL || !isFile(fileFsP->inodeP)){
 			printf("%s is not a file!\r\n");
 			return ;
 		}
 		fseekFs(fileFsP, fileFsP->inodeP->length);
-		printf("input the file content!");
+		printf("input the file content!\r\n");
 		char * mem = (char *)Malloc(512);
 		scanf("%512[^\n]", mem);
 		writeFileBuffer(fileFsP, mem);
+		free(mem);
 	}
 }
 
@@ -209,7 +237,11 @@ void READ(char ** cmds) //read file
 		return ;
 	}
 	char path[256];
+	int length = strlen(currentPwd);
 	strcpy(path, currentPwd);
+	if(currentPwd[length-1] != '/'){
+		strcat(path, "/");
+	}
 	strcat(path, cmds[1]);
 	FILE_FS * fileFsP = openFile(path);
 	if(NULL == fileFsP){

@@ -25,7 +25,6 @@ void run()
 	char command[16];
 	char ** cmds = NULL;
 	int n = 0;
-	currentPwd = (char *)Malloc(PWD_LENGTH);
 	strcpy(currentPwd, "/");
 
 	while (TRUE)
@@ -166,6 +165,10 @@ int main()
 	currentUser = (User*)Malloc(sizeof(User));
 	currentUser->username = (char*)Malloc(16);
 	currentUser->passwd = (char*)Malloc(16);
+
+	currentPwd = (char *)Malloc(PWD_LENGTH);
+	memset(currentPwd, 0, PWD_LENGTH);
+
 	if(NULL == dataFp){
 		printf("Can not open emulate file: %s.\r\n", dataFileName);
 		getchar();
