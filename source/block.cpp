@@ -33,8 +33,7 @@ void readBlock(BLOCK * blockP, void * mem)
 //找到一个没用的扇区，并全部写0，返回该扇区的编号
 BLOCK * createBlock()
 {
-	int blockPos = findZero(superBlockPointer->bBitMap, 
-		superBlockPointer->blockBitMapCount * superBlockPointer->blockSize / 8);
+	int blockPos = getFreeBlockNumber(superBlockPointer);
 	fseek(dataFp, superBlockPointer->blockSize * blockPos, SEEK_SET);
 	writeNull(512, dataFp);
 	BLOCK * blockP = (BLOCK *)Malloc(sizeof(BLOCK));

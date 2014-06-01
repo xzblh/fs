@@ -149,7 +149,7 @@ void writeINODEData(INODE * inodeP, char c, unsigned int offset)
 
 BOOL isDir(INODE * inodeP)
 {
-	if(inodeP->authority && _DIR_DEFINE_)
+	if(inodeP->authority & _DIR_DEFINE_)
 		return TRUE;
 	else
 		return FALSE;
@@ -188,10 +188,11 @@ void inodeDirAddFile(INODE * inodeP, void * mem, int length)
 		return ;
 	}
 	void * _mem = Malloc(superBlockPointer->blockSize);
-	memcpy((char*)_mem + inodeP->length, mem, 32);
 
 	//当前扇区上添加新增的文件数据。 及文件名和文件的INODE编号
 	BLOCK * blockP = getBlock(getCurrentBlockNumber(inodeP));
+	readBlock(blockP, _mem);
+	memcpy((char*)_mem + inodeP->length, mem, 32);
 	writeBlock(blockP, _mem);
 	freeBlock(blockP);
 	inodeP->length += 32;

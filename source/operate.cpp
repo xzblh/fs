@@ -17,22 +17,89 @@ void CD(char ** cmds) //get into foler
 	//使用形式 必须是，小写：cd folder
 
 }
+
 void TOUCH(char ** cmds) //create file
 {
-
+	if(NULL == cmds[1]){
+		printf("params number is not right!\r\n");
+		return;
+	}
+	else{
+		FILE_FS *fileFsP = openFile(currentPwd);
+		if(getFileInodeInFolder(fileFsP, cmds[1])){
+			printf("%s is exist!\r\n", cmds[1]);
+		}
+		int result = createFile(fileFsP->inodeP, cmds[1]);
+		switch(result){
+		case -1:
+			printf("%s is not a directory!\r\n", currentPwd);
+			break;
+		case -2:
+			printf("Permission denied!\r\n");
+			break;
+		case -3:
+			printf("You have too much file or dir in %s!\r\n", currentPwd);
+			break;
+		case -4:
+			printf("%s is too long for as fileName!\r\n", cmds[1]);
+			break;
+		case -5:
+			printf("can not contain with /\r\n");
+			break;
+		default:
+			printf("Success!\r\n");
+		}
+	}
 }
+
 void RM(char ** cmds) //remove file
 {
 
 }
+
 void MKDIR(char ** cmds) //create folder
 {
+	if(NULL == cmds[1]){
+		printf("params number is not right!\r\n");
+		return;
+	}
+	else{
+		FILE_FS *fileFsP = openFile(currentPwd);
+		if(getFileInodeInFolder(fileFsP, cmds[1])){
+			printf("%s is exist!\r\n", cmds[1]);
+		}
+		else{
+			int result = createDir(fileFsP->inodeP, cmds[1]);
+			switch(result){
+			case -1:
+				printf("%s is not a directory!\r\n", currentPwd);
+				break;
+			case -2:
+				printf("Permission denied!\r\n");
+				break;
+			case -3:
+				printf("You have too much file or dir in %s!\r\n", currentPwd);
+				break;
+			case -4:
+				printf("%s is too long for as fileName!\r\n", cmds[1]);
+				break;
+			case -5:
+				printf("can not contain with /\r\n");
+				break;
+			default:
+				printf("Success!\r\n");
+			}
+		}
+		freeFILE_FS(fileFsP);
+	}
 
 }
+
 void RMDIR(char ** cmds) //remove folder
 {
 
 }
+
 void LS(char ** cmds) //list files attributes
 {
 	FILE_FS * fileFsP = openFile(currentPwd);
@@ -54,6 +121,7 @@ void LS(char ** cmds) //list files attributes
 		memcpy(str, mem + pos, 32);
 		inodeNumber = *(int *)(str + 28);
 		tmpInode = getINODE(inodeNumber);
+		printf("%d\t", tmpInode->inodeNumber);
 		printInode(tmpInode);
 		printf("%s", str);
 		printf("\r\n");
@@ -61,14 +129,41 @@ void LS(char ** cmds) //list files attributes
 		pos += 32;
 	}
 }
+
 void WRITE(char ** cmds) //write file
 {
 
 }
+
 void READ(char ** cmds) //read file
 {
+	if(NULL == cmds[1]){
+		printf("params number is not right!\r\n");
+		return ;
+	}
+	char path[256];
+	strcpy(path, currentPwd);
+	strcat(path, cmds[1]);
+	FILE_FS * fileFsP = openFile(path);
+	if(NULL == fileFsP){
+		printf("no such file!\r\n");
+	}
+	else{
+		char str[32];
+		memset(str, 0, 32);
+		fseekFs(fileFsP, 0);
+		int ch = NULL;
+		while(fileFsP->offset < fileFsP->inodeP->length){
+			ch = getc_FS(fileFsP);
+			if(-1 != ch){
+				printf("%c", ch);
+			}
+		}
+		printf("\r\n");
+	}
 
 }
+
 void UMASK(char ** cmds) //set the file or folder's attributes
 {
 

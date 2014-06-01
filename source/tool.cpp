@@ -86,7 +86,8 @@ BOOL _login(char * username, char * password)
 {
 	FILE_FS * fileFsP = openFile("/user");
 	if(fileFsP == NULL){
-		printf("无法打开用户文件，登陆失败，或者删除data.txt文件重新运行模拟程序！\r\n");
+		printf("Can not open user file!\r\n");
+		//printf("无法打开用户文件，登陆失败，或者删除data.txt文件重新运行模拟程序！\r\n");
 		return FALSE;
 	}
 	User * userP = getUser(fileFsP);

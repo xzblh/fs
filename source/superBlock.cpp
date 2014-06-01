@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "block.h"
 #include "tool.h"
 #include "superBlock.h"
 #include "file.h"
 
+extern SUPER_BLOCK * superBlockPointer;
 extern User * currentUser;
 
 void writeSuperBlock(SUPER_BLOCK * superBlockP, FILE * fp)
@@ -47,7 +49,28 @@ void writeRoot(SUPER_BLOCK * superBlockP)
 	//只有初始化时才会调用到这个文件，通常是调用下面的读方法
 	//inodeP的inodeNumber就是0
 	INODE * inodeP = createINODE(_755_AUTHORITY_DIR_); // 默认drwxr-xr-x 755
+
+	int blockNumber = getFreeBlockNumber(superBlockPointer);
+	BLOCK * blockP = getBlock(blockNumber);
+	//INODE增加分配的扇区的记录
+	inodeMemAddBlock(inodeP, blockNumber);
+	initBlock(blockP);
+	freeBlock(blockP);
 	writeINODE(inodeP);
+
+	char str[32];
+	//添加父文件夹节点到当前文件夹
+	memset(str, 0, 32);
+	strcpy(str, "..");
+	*(unsigned int*)(str+28) = inodeP->inodeNumber;
+	inodeDirAddFile(inodeP, str, 32);
+
+	//添加当前文件节点到当前文件夹
+	memset(str, 0, 32);
+	strcpy(str, ".");
+	*(unsigned int*)(str+28) = inodeP->inodeNumber;
+	inodeDirAddFile(inodeP, str, 32);
+
 	superBlockP->inode = inodeP;
 }
 

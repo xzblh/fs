@@ -22,7 +22,7 @@ int getc_FS(FILE_FS * fileFsP)
 	int pos = fileFsP->offset % superBlockPointer->blockSize;
 	char * s = (char*)fileFsP->mem;
 	int ch = s[pos];
-	if(fileFsP->offset < fileFsP->inodeP->length - 1){
+	if(fileFsP->offset < fileFsP->inodeP->length){
 		fileFsP->offset++;
 	}
 	if(fileFsP->offset % superBlockPointer->blockSize == 0){
@@ -149,6 +149,9 @@ int createFile(INODE * inodeP, char * fileName)
 	if(!hasCreateFileAuthority(inodeP, currentUser)){
 		return -2;
 	}
+	if(fileName == NULL || strchr(fileName, '/') != NULL){
+		return -5;
+	}
 	if(inodeP->length % superBlockPointer->blockSize == 0){
 		//之前分配的block刚好用完。
 		if(inodeP->length + (unsigned int)32 >= getFileSizeLimit(superBlockPointer)){
@@ -190,6 +193,9 @@ int createDir(INODE * inodeP, char * dirName)
 	if(!isDir(inodeP)){
 		return -1;
 	}
+	if(dirName == NULL || strchr(dirName, '/') != NULL){
+		return -5;
+	}
 
 	if(inodeP->length % superBlockPointer->blockSize == 0){
 		//之前分配的block刚好用完。
@@ -215,13 +221,19 @@ int createDir(INODE * inodeP, char * dirName)
 	*(unsigned int*)(str+28) = newDirInodeP->inodeNumber;
 	inodeDirAddFile(inodeP, str, 32);
 
-	//添加父文件夹节点到当前文件夹
+	//为新文件夹分配间接扇区
+	BLOCK * blockP = createBlock();
+	//在原来文件夹的间接扇区上增加新增的扇区编号
+	inodeMemAddBlock(newDirInodeP, blockP->blockNumber);
+	freeBlock(blockP);
+
+	//添加父文件夹节点到新文件夹
 	memset(str, 0, 32);
 	strcpy(str, "..");
 	*(unsigned int*)(str+28) = inodeP->inodeNumber;
 	inodeDirAddFile(newDirInodeP, str, 32);
 
-	//添加当前文件节点到当前文件夹
+	//添加当前文件节点到新文件夹
 	memset(str, 0, 32);
 	strcpy(str, ".");
 	*(unsigned int*)(str+28) = newDirInodeP->inodeNumber;

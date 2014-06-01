@@ -76,11 +76,15 @@ void run()
 			//文件或目录权限设置
 			UMASK(cmds);
 		}
+		else if(strcmp(cmds[0], "pwd")){
+			printf("%s\r\n", currentPwd);
+		}
 		else{
 			continue;
 		}
 	}
 }
+
 void initSuperBlock()
 {
 	superBlockPointer = (SUPER_BLOCK *)Malloc(sizeof(SUPER_BLOCK));
@@ -175,7 +179,8 @@ int main()
 		run();
 	}
 	else{
-		printf("登陆失败！\r\n");
+		printf("Log in failed!\r\n");
+		//printf("登陆失败！\r\n");
 	}
 	return 0;
 }
