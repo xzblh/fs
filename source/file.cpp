@@ -181,6 +181,14 @@ int createFile(INODE * inodeP, char * fileName)
 	return 0;
 }
 
+int removeFile(INODE * inodeP)
+{
+
+
+	setFreeInodeNumber(superBlockPointer, inodeP->inodeNumber);
+	return 0;
+}
+
 int createDir(INODE * inodeP, char * dirName)
 {
 	if(strlen(dirName) > 27){
@@ -243,6 +251,14 @@ int createDir(INODE * inodeP, char * dirName)
 	writeINODE(newDirInodeP);
 	return 0;
 
+}
+
+int removeDir(INODE * inodeP)
+{
+
+
+	setFreeInodeNumber(superBlockPointer, inodeP->inodeNumber);
+	return 0;
 }
 
 void writeAddUser(User * userP, FILE_FS * fileFsP)

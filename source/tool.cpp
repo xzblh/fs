@@ -215,6 +215,44 @@ int findZero(void * mem, int length) //查找并设置bitmap
 	return -1;
 }
 
+int setZero(void * mem, unsigned int length, unsigned int pos)
+{
+	if(pos > length * 8){
+		return -1;
+	}
+	char * str = (char *) mem;
+	int posChar = pos / 8;
+	unsigned int posBit = pos % 8;
+	char c = str[posChar];
+	switch(posBit){
+	case 0:
+		c = c & 0xFE;
+		break;
+	case 1:
+		c = c & 0xFD;
+		break;
+	case 2:
+		c = c & 0xFB;
+		break;
+	case 3:
+		c = c & 0xF7;
+		break;
+	case 4:
+		c = c & 0xEF;
+		break;
+	case 5:
+		c = c & 0xDF;
+		break;
+	case 6:
+		c = c & 0xBF;
+		break;
+	case 7:
+		c = c & 0x7F;
+		break;
+	}
+	str[posChar] = c;	
+	return 0;
+}
 
 BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
 {

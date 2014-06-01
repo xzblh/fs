@@ -7,6 +7,7 @@
 #include "superBlock.h"
 #include "file.h"
 
+extern FILE * dataFp;
 extern SUPER_BLOCK * superBlockPointer;
 extern User * currentUser;
 
@@ -38,10 +39,10 @@ void readBitMap(SUPER_BLOCK * superBlockP, FILE * fp)
 	fseek(fp, 512*2, SEEK_SET);
 	fread(superBlockP->bBitMap, superBlockP->blockSize / 8, superBlockP->blockBitMapCount, fp);
 	superBlockP->blockFreeCount = superBlockP->blockCount - countMem(superBlockP->bBitMap, 
-		superBlockP->blockBitMapCount * superBlockP->blockSize);
+		getBlockBitMapByteCount(superBlockP));
 	fread(superBlockP->iBitMap, superBlockP->blockSize / 8, superBlockP->inodeBitMapCount, fp);
 	superBlockP->inodeFreeCount = superBlockP->inodeCount - countMem(superBlockP->iBitMap,
-		superBlockP->inodeBitMapCount * superBlockP->blockSize);
+		getInodeBitMapByteCount(superBlockP));
 }
 
 void writeRoot(SUPER_BLOCK * superBlockP)
@@ -96,14 +97,30 @@ int getInodeAreaOffset(SUPER_BLOCK * superBlockP)
 	return superBlockP->blockSize * (1 + 1 + superBlockP->blockBitMapCount + superBlockP->inodeBitMapCount);
 }
 
+int setFreeBlockNumber(SUPER_BLOCK * superBlockP, int pos)
+{
+	setZero(superBlockP->bBitMap, getBlockBitMapByteCount(superBlockP), pos);
+	writeBitMap(superBlockP, dataFp);
+}
+
+int setFreeInodeNumber(SUPER_BLOCK * superBlockP, int pos)
+{
+	setZero(superBlockP->iBitMap, getInodeBitMapByteCount(superBlockP), pos);
+	writeBitMap(superBlockP, dataFp);
+}
+
 unsigned int getFreeBlockNumber(SUPER_BLOCK * superBlockP)
 {
-	return findZero(superBlockP->bBitMap, getBlockBitMapByteCount(superBlockP));
+	unsigned int offset = findZero(superBlockP->bBitMap, getBlockBitMapByteCount(superBlockP));
+	writeBitMap(superBlockP, dataFp);
+	return offset;
 }
 
 unsigned int getFreeInodeNumber(SUPER_BLOCK * superBlockP)
 {
-	return findZero(superBlockP->iBitMap, getInodeBitMapByteCount(superBlockP));
+	unsigned int offset = findZero(superBlockP->iBitMap, getInodeBitMapByteCount(superBlockP));
+	writeBitMap(superBlockP, dataFp);
+	return offset;
 }
 
 unsigned int getBlockBitMapByteCount(SUPER_BLOCK * superBlockP)

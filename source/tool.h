@@ -32,6 +32,7 @@ void writeBootSector();
 int countMem(void * mem, int length);
 int countChar(unsigned char ch);
 int findZero(void * mem, int length);
+int setZero(void * mem, unsigned int length, unsigned int pos);
 BOOL hasCreateFileAuthority(INODE * inodeP, User * userP);
 void writeNull(unsigned int count, FILE * fp);
 void writeChar(char * s, int count, FILE * fp);  //把某个字符写到文件当前位置count次

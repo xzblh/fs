@@ -59,6 +59,7 @@ void writeINODEData(INODE * inodeP, char c);
 void writeINODEData(INODE * inodeP, char c, unsigned int offset);
 void writeUser(User * userP);
 BOOL isDir(INODE * inodeP);
+BOOL isFile(INODE * inodeP);
 void freeInode(INODE * inodeP);
 int getCurrentBlockNumber(INODE * inodeP);
 int getBlockNumber(INODE * inodeP, unsigned int offset);

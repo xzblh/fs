@@ -21,7 +21,7 @@ extern User * currentUser;
 /************************************************************************/
 INODE * createINODE(unsigned int authority)
 {
-	int inodePos = findZero(superBlockPointer->iBitMap, getInodeBitMapByteCount(superBlockPointer));
+	int inodePos = getFreeInodeNumber(superBlockPointer);
 	INODE * inodeP = (INODE*)Malloc(sizeof(INODE));
 	inodeP->mem = Malloc(superBlockPointer->blockSize);
 	inodeP->inodeNumber = inodePos;
@@ -149,10 +149,26 @@ void writeINODEData(INODE * inodeP, char c, unsigned int offset)
 
 BOOL isDir(INODE * inodeP)
 {
+	if(NULL == inodeP){
+		return FALSE;
+	}
 	if(inodeP->authority & _DIR_DEFINE_)
 		return TRUE;
 	else
 		return FALSE;
+}
+
+BOOL isFile(INODE * inodeP)
+{
+	if(NULL == inodeP){
+		return FALSE;
+	}
+	if(inodeP->authority & _FILE_DEFINE_){
+		return TRUE;
+	}
+	else{
+		return FALSE;
+	}
 }
 
 void freeInode(INODE * inodeP)
@@ -223,12 +239,12 @@ void printInode(INODE * inodeP)
 	//printf(ctime(&inodeP->aTime));
 	//printf(ctime(&inodeP->mTime));
 	tmpTime = localtime(&inodeP->cTime);
-	printf("cTime:%02d-%02d\t", tmpTime->tm_mon + 1, tmpTime->tm_mday);
+	printf("cTime:%02d-%02d\t", tmpTime->tm_hour, tmpTime->tm_sec);
 	tmpTime = localtime(&inodeP->aTime);
-	printf("aTime:%02d-%02d\t", tmpTime->tm_mon + 1, tmpTime->tm_mday);
+	printf("aTime:%02d-%02d\t", tmpTime->tm_hour, tmpTime->tm_sec);
 	//tmpTime = localtime(&inodeP->mTime);
 	//printf("修改时间：%d-%d-%d\t", tmpTime->tm_year, tmpTime->tm_mon, tmpTime->tm_mday);
-	printf("size:%d Byte\t", inodeP->length);
+	printf("size:%d B\t", inodeP->length);
 }
 
 void printAuthority(INODE * inodeP)

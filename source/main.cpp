@@ -76,6 +76,9 @@ void run()
 			//文件或目录权限设置
 			UMASK(cmds);
 		}
+		else if(strcmp(cmds[0], "exit") == 0){
+			return ;
+		}
 		else if(strcmp(cmds[0], "pwd")){
 			printf("%s\r\n", currentPwd);
 		}

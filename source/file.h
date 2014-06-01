@@ -23,7 +23,9 @@ void writeFileBuffer(FILE_FS * fileFsP, char * s);
 int writeFileBuffer(FILE_FS * fileFsP, void * mem, int length);
 //void readFileBuffer(FILE_FS * fileFsP); //这个函数好像同readFileContent()功能差不多
 int createFile(INODE * inodeP, char * fileName);
+int removeFile(INODE * inodeP);
 int createDir(INODE * inodeP, char * dirName);
+int removeDir(INODE * inodeP);
 void writeAddUser(User * userP, FILE_FS * fileFsP);
 User * getUser(FILE_FS * fileFsP);
 FILE_FS * openFile(char * fileName);

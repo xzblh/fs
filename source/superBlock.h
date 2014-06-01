@@ -30,6 +30,8 @@ void writeRoot(SUPER_BLOCK * superBlockP);
 void readRoot(SUPER_BLOCK * superBlockP);
 unsigned int getFileSizeLimit(SUPER_BLOCK * superBlockP);
 int getInodeAreaOffset(SUPER_BLOCK * superBlockP);
+int setFreeBlockNumber(SUPER_BLOCK * superBlockP, int pos);
+int setFreeInodeNumber(SUPER_BLOCK * superBlockP, int pos);
 unsigned int getFreeBlockNumber(SUPER_BLOCK * superBlockP);
 unsigned int getFreeInodeNumber(SUPER_BLOCK * superBlockP);
 unsigned int getBlockBitMapByteCount(SUPER_BLOCK * superBlockP);
