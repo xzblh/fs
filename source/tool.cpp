@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dentry.h"
 #include "file.h"
 #include "tool.h"
 #include "superBlock.h"
@@ -28,10 +27,6 @@ char ** parse(char * s)
 		}
 		_tmp = strtok(NULL, " ");
 		i++;
-	}
-	if(i == 1){
-		free(p);
-		return NULL;
 	}
 	return p;
 }
@@ -138,7 +133,12 @@ INODE * getInode(char * path) //等价于书上的NameI()
 				}
 			}
 			else{
-				freeFILE_FS(fileFsP);
+				if(flag){
+					flag = FALSE;
+				}
+				else{
+					freeFILE_FS(fileFsP);
+				}
 				return NULL;
 			}
 		}

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "file.h"
 #include "block.h"
@@ -94,6 +95,58 @@ void writeINODE(INODE * inodeP)
 	}
 }
 
+void writeINODEData(INODE * inodeP, char c) //往INODE数据区结尾写数据
+{
+	if((inodeP->length+1) % superBlockPointer->blockSize == 0){
+		//需要新增扇区
+
+		//获得为原来文件夹新增的扇区
+		BLOCK * blockP = createBlock();
+		//在原来文件夹的间接扇区上增加新增的扇区编号
+		inodeMemAddBlock(inodeP, blockP->blockNumber);
+
+		char * mem = (char *)Malloc(superBlockPointer->blockSize);
+		readBlock(blockP, mem);
+		mem[(inodeP->length+1) % superBlockPointer->blockSize] = c;
+		free(mem);
+		freeBlock(blockP);
+		inodeP->length ++;
+	}
+	else{
+		int blockNumber = getCurrentBlockNumber(inodeP);
+		BLOCK * blockP = getBlock(blockNumber);
+		char * mem = (char *)Malloc(superBlockPointer->blockSize);
+		readBlock(blockP, mem);
+		mem[(inodeP->length+1) % superBlockPointer->blockSize] = c;
+		free(mem);
+		freeBlock(blockP);
+		inodeP->length ++;
+	}
+}
+
+void writeINODEData(INODE * inodeP, char c, unsigned int offset)
+{
+	if(offset > inodeP->length){
+		while(inodeP->length < offset){
+			writeINODEData(inodeP, '\0');
+		}
+		writeINODEData(inodeP, c, offset);
+	}
+	else{
+		int blockNumber = getBlockNumber(inodeP, offset);
+		if(blockNumber == NULL){
+			return ;
+		}
+		BLOCK * blockP = getBlock(blockNumber);
+		char * mem = (char *)Malloc(superBlockPointer->blockSize);
+		readBlock(blockP, mem);
+		mem[offset % superBlockPointer->blockSize] = c;
+		writeBlock(blockP, mem);
+		free(mem);
+		freeBlock(blockP);
+	}
+}
+
 BOOL isDir(INODE * inodeP)
 {
 	if(inodeP->authority && _DIR_DEFINE_)
@@ -111,6 +164,14 @@ void freeInode(INODE * inodeP)
 int getCurrentBlockNumber(INODE * inodeP)
 {
 	return ((int *)inodeP->mem)[inodeP->length / superBlockPointer->blockSize];
+}
+
+int getBlockNumber(INODE * inodeP, unsigned int offset)
+{
+	if(offset < inodeP->length){
+		return NULL;
+	}
+	return ((int *)inodeP->mem)[offset / superBlockPointer->blockSize];
 }
 
 void inodeMemAddBlock(INODE * inodeP, int blockNumber)
@@ -131,9 +192,114 @@ void inodeDirAddFile(INODE * inodeP, void * mem, int length)
 
 	//当前扇区上添加新增的文件数据。 及文件名和文件的INODE编号
 	BLOCK * blockP = getBlock(getCurrentBlockNumber(inodeP));
-	writeBlock(blockP, mem);
+	writeBlock(blockP, _mem);
 	freeBlock(blockP);
 	inodeP->length += 32;
 	writeINODE(inodeP);
-	free(mem);
+	free(_mem);
+}
+
+void writeNotInodeMetaData(INODE * inodeP , char c, unsigned int offset)
+{
+
+}
+
+void printInode(INODE * inodeP)
+{
+	if(inodeP == NULL){
+		return;
+	}
+	if(isDir(inodeP)){
+		printf("d");
+	}
+	else{
+		printf("-");
+	}
+	printAuthority(inodeP);
+	printf("\t");
+	struct tm * tmpTime ;
+	//printf(ctime(&inodeP->cTime));
+	//printf(ctime(&inodeP->aTime));
+	//printf(ctime(&inodeP->mTime));
+	tmpTime = localtime(&inodeP->cTime);
+	printf("cTime:%02d-%02d\t", tmpTime->tm_mon + 1, tmpTime->tm_mday);
+	tmpTime = localtime(&inodeP->aTime);
+	printf("aTime:%02d-%02d\t", tmpTime->tm_mon + 1, tmpTime->tm_mday);
+	//tmpTime = localtime(&inodeP->mTime);
+	//printf("修改时间：%d-%d-%d\t", tmpTime->tm_year, tmpTime->tm_mon, tmpTime->tm_mday);
+	printf("size:%d Byte\t", inodeP->length);
+}
+
+void printAuthority(INODE * inodeP)
+{
+	printUserAuthority(inodeP);
+	printGroupAuthority(inodeP);
+	printOtherAuthority(inodeP);
+}
+
+void printUserAuthority(INODE * inodeP)
+{
+	if(inodeP->authority & _USER_READ_DEFINE_){
+		printf("r");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _USER_WRITE_DEFINE_){
+		printf("w");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _USER_EXEC_DEFINE_){
+		printf("x");
+	}
+	else{
+		printf("-");
+	}
+}
+
+void printGroupAuthority(INODE * inodeP)
+{
+	if(inodeP->authority & _GROUP_READ_DEFINE_){
+		printf("r");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _GROUP_WRITE_DEFINE_){
+		printf("w");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _GROUP_EXEC_DEFINE_){
+		printf("x");
+	}
+	else{
+		printf("-");
+	}
+
+}
+
+void printOtherAuthority(INODE * inodeP)
+{
+	if(inodeP->authority & _OTHER_READ_DEFINE_){
+		printf("r");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _OTHER_WRITE_DEFINE_){
+		printf("w");
+	}
+	else{
+		printf("-");
+	}
+	if(inodeP->authority & _OTHER_EXEC_DEFINE_){
+		printf("x");
+	}
+	else{
+		printf("-");
+	}
 }

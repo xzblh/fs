@@ -17,7 +17,7 @@ char dataFileName[] = "data.txt";
 FILE * dataFp = NULL;
 SUPER_BLOCK * superBlockPointer = NULL;
 
-char currentPwd[PWD_LENGTH];
+char * currentPwd;
 User * currentUser = NULL;
 
 void run()
@@ -25,6 +25,8 @@ void run()
 	char command[16];
 	char ** cmds = NULL;
 	int n = 0;
+	currentPwd = (char *)Malloc(PWD_LENGTH);
+	strcpy(currentPwd, "/");
 
 	while (TRUE)
 	{

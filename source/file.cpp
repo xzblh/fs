@@ -13,18 +13,41 @@ extern FILE * dataFp;
 extern SUPER_BLOCK * superBlockPointer;
 
 
-char getc_FS(FILE_FS * fileFsP)
+int getc_FS(FILE_FS * fileFsP)
 {
+	//偏移为1，长度为2。则偏移为2时应该没有数据
+	if(fileFsP->offset >= fileFsP->inodeP->length){
+		return -1;
+	}
 	int pos = fileFsP->offset % superBlockPointer->blockSize;
 	char * s = (char*)fileFsP->mem;
-	char c = s[pos];
-	fileFsP->offset++;
-	if(fileFsP->offset == superBlockPointer->blockSize){
+	int ch = s[pos];
+	if(fileFsP->offset < fileFsP->inodeP->length - 1){
+		fileFsP->offset++;
+	}
+	if(fileFsP->offset % superBlockPointer->blockSize == 0){
 		readFileContent(fileFsP);
 	}
-	return c;
+	return ch;
 }
-void * getContent_FS(FILE_FS * fileFsP);
+
+unsigned int getContent_FS(FILE_FS * fileFsP, void * mem, unsigned int length)
+{
+	if(fileFsP == NULL || mem == NULL){
+		return NULL;
+	}
+	char * str = (char*)mem;
+	unsigned int i = 0;
+	char c = NULL;
+	while(i < length){
+		c = getc_FS(fileFsP);
+		if(c == -1){
+			return i;
+		}
+		str[i++] = c;
+	}
+	return length;
+}
 
 int writeContent(INODE * inodeP, void * mem, int length, int offset)
 {
@@ -182,29 +205,30 @@ int createDir(INODE * inodeP, char * dirName)
 			freeBlock(blockP);
 		}
 	}
-	INODE * tmpInodePointer = createINODE(_755_AUTHORITY_DIR_);
+	INODE * newDirInodeP = createINODE(_755_AUTHORITY_DIR_);
 
 	char str[32];
-	memset(str, 0, 32);
-	strcpy(str, dirName);
 
 	//把文件名和文件的INODE编号组合在32个字节里面。
-	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
+	memset(str, 0, 32);
+	strcpy(str, dirName);
+	*(unsigned int*)(str+28) = newDirInodeP->inodeNumber;
 	inodeDirAddFile(inodeP, str, 32);
 
-	//添加父文件夹节点和当前文件节点到当前文件夹
+	//添加父文件夹节点到当前文件夹
 	memset(str, 0, 32);
 	strcpy(str, "..");
 	*(unsigned int*)(str+28) = inodeP->inodeNumber;
-	inodeDirAddFile(tmpInodePointer, str, 32);
+	inodeDirAddFile(newDirInodeP, str, 32);
 
+	//添加当前文件节点到当前文件夹
 	memset(str, 0, 32);
 	strcpy(str, ".");
-	*(unsigned int*)(str+28) = tmpInodePointer->inodeNumber;
-	inodeDirAddFile(tmpInodePointer, str, 32);
+	*(unsigned int*)(str+28) = newDirInodeP->inodeNumber;
+	inodeDirAddFile(newDirInodeP, str, 32);
 
 	writeINODE(inodeP); //这个可以不用调用的，因为inodeDirAddFile()函数已经调用过了
-	writeINODE(tmpInodePointer);
+	writeINODE(newDirInodeP);
 	return 0;
 
 }
@@ -329,15 +353,24 @@ int getFileInodeInFolder(FILE_FS * fileFsP, char * fileName)
 		return NULL;
 	}
 	char str[32];
-	int pos = 0;
+	memset(str, 0, 32);
+	//int pos = 0;
 	fseekFs(fileFsP, 0);
-	char * src = (char *)fileFsP->mem;
-	while(pos < fileFsP->inodeP->length){
-		memcpy(str, src + (pos%superBlockPointer->blockSize), 32);
+	while(getContent_FS(fileFsP, str, 32)  == 32){
 		if(strcmp(str, fileName) == 0){
 			return *(int *)(str+28);
 		}
-		pos += 32;
 	}
 	return NULL;
+	/*
+	char * src = (char *)fileFsP->mem;
+	while(pos < fileFsP->inodeP->length){
+	memcpy(str, src + (pos%superBlockPointer->blockSize), 32);
+	pos += 32;
+	fileFsP->offset += 32;
+	if(fileFsP->offset % superBlockPointer->blockSize == 0){
+	readFileContent(fileFsP);
+	}
+	}
+	return NULL;*/
 }

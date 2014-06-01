@@ -9,8 +9,8 @@
 		void * mem; //间接block的内容
 	}FILE_FS;
 
-	char getc_FS(FILE_FS * fileFsP);
-	void * getContent_FS(FILE_FS * fileFsP);
+	int getc_FS(FILE_FS * fileFsP);
+	unsigned int getContent_FS(FILE_FS * fileFsP, void * mem, unsigned int length);
 
 #endif
 

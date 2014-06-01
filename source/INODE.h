@@ -55,10 +55,18 @@
 INODE * createINODE(unsigned int authority);
 INODE * getINODE(int inodeNumber);
 void writeINODE(INODE * inodeP);
+void writeINODEData(INODE * inodeP, char c);
+void writeINODEData(INODE * inodeP, char c, unsigned int offset);
 void writeUser(User * userP);
 BOOL isDir(INODE * inodeP);
 void freeInode(INODE * inodeP);
 int getCurrentBlockNumber(INODE * inodeP);
+int getBlockNumber(INODE * inodeP, unsigned int offset);
 void inodeMemAddBlock(INODE * inodeP, int blockNumber);
 void inodeDirAddFile(INODE * inodeP, void * mem, int length);
 				//文件夹INODE节点中，增加文件夹或文件记录， mem长度必须是32字节。
+void printInode(INODE * inodeP);
+void printAuthority(INODE * inodeP);
+void printUserAuthority(INODE * inodeP);
+void printGroupAuthority(INODE * inodeP);
+void printOtherAuthority(INODE * inodeP);
