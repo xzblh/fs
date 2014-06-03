@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "file.h"
 #include "tool.h"
@@ -91,7 +92,7 @@ BOOL _login(char * username, char * password)
 		return FALSE;
 	}
 	User * userP = getUser(fileFsP);
-	if(strcmp(userP->username, username) == 0 && strcmp(userP->passwd, password) == 0){
+	if(usrP != NULL && strcmp(userP->username, username) == 0 && strcmp(userP->passwd, password) == 0){
 		return TRUE;
 	}
 	else{
@@ -314,5 +315,34 @@ void * pathCat(char * path, char * path2)
 			strcat(path, path2);
 		}
 		return path;
+	}
+}
+
+void setUmask(User * userP, char * s)
+{
+	if(NULL == s){
+		return;
+	}
+	if(strlen(s) > 4){
+		return;
+	}
+	if(!isDigit(s)){
+		return;
+	}
+
+}
+
+BOOL isDigit(char * s)
+{
+	if(NULL == s){
+		return FALSE;
+	}
+	int len = strlen(s);
+	int i = 0;
+	while(i < len){
+		if(!isdigit(s[i])){
+			return FALSE;
+		}
+		i++;
 	}
 }

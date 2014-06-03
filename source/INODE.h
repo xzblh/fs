@@ -47,8 +47,10 @@
 #define _OTHER_WRITE_DEFINE_  0x00000002
 #define _OTHER_EXEC_DEFINE_   0x00000001
 
-#define _755_AUTHORITY_FILE_  0x000009ED  //755 的 -rwxr-xr-x权限
-#define _755_AUTHORITY_DIR_   0x000011ED  //755 的 drwxr-xr-x权限
+#define _755_AUTHORITY_FILE_  0x000009ED  //755 的 _ -__r wxr_ xr_x 权限
+#define _755_AUTHORITY_DIR_   0x000011ED  //755 的 d ___r wxr_ xr_x 权限
+#define _664_AUTHORITY_FILE_  0x000009B4  //664 的 _ -__r w_rw _r__ 权限
+#define _775_AUTHORITY_DIR_   0x000011FD  //775 的 d ___r wxrw xr_x 权限
 
 #endif
 

@@ -16,6 +16,7 @@ typedef struct _user{
 	char * passwd;
 	int UID;
 	int GID;
+	unsigned int umask;
 }User;
 #endif
 
@@ -37,3 +38,5 @@ BOOL hasCreateFileAuthority(INODE * inodeP, User * userP);
 void writeNull(unsigned int count, FILE * fp);
 void writeChar(char * s, int count, FILE * fp);  //把某个字符写到文件当前位置count次
 void * pathCat(char * path, char * path2);
+void setUmask(User * userP, char * );
+BOOL isDigit(char * s); //判断一个字符串是否全是数字
