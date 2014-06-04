@@ -148,7 +148,7 @@ int writeFileBuffer(FILE_FS * fileFsP, void * mem, int length)
 	return length;
 }
 
-int createFile(INODE * inodeP, char * fileName)
+int createFile(INODE * inodeP, char * fileName, unsigned int authority)
 {
 	if(strlen(fileName) > 27){
 		//文件名长度限制 必须小于等于27，最长不能超过27
@@ -179,7 +179,7 @@ int createFile(INODE * inodeP, char * fileName)
 	}
 
 	//获得新文件的INODE
-	INODE * tmpInodePointer = createINODE(_755_AUTHORITY_FILE_);
+	INODE * tmpInodePointer = createINODE(authority | _FILE_DEFINE_);
 
 	//把文件名和文件的INODE编号组合在32个字节里面。
 	char str[32];
@@ -253,7 +253,7 @@ int removeFile(INODE * inodeP, char * fileName)
 	return -2;
 }
 
-int createDir(INODE * inodeP, char * dirName)
+int createDir(INODE * inodeP, char * dirName, unsigned int authority)
 {
 	if(strlen(dirName) > 27){
 		//文件夹名长度限制 必须小于等于27，最长不能超过27
@@ -283,7 +283,7 @@ int createDir(INODE * inodeP, char * dirName)
 			freeBlock(blockP);
 		}
 	}
-	INODE * newDirInodeP = createINODE(_755_AUTHORITY_DIR_);
+	INODE * newDirInodeP = createINODE(authority | _755_AUTHORITY_DIR_); //确保创建的一定是个DIR节点
 
 	char str[32];
 

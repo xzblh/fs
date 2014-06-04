@@ -73,7 +73,7 @@ void TOUCH(char ** cmds) //create file
 			printf("%s is exist!\r\n", cmds[1]);
 			return;
 		}
-		int result = createFile(fileFsP->inodeP, cmds[1]);
+		int result = createFile(fileFsP->inodeP, cmds[1], ~currentUser->umask & _664_AUTHORITY_FILE_);
 		switch(result){
 		case -1:
 			printf("%s is not a directory!\r\n", currentPwd);
@@ -119,7 +119,7 @@ void MKDIR(char ** cmds) //create folder
 			printf("%s is exist!\r\n", cmds[1]);
 		}
 		else{
-			int result = createDir(fileFsP->inodeP, cmds[1]);
+			int result = createDir(fileFsP->inodeP, cmds[1], ~currentUser->umask & _755_AUTHORITY_DIR_);
 			switch(result){
 			case -1:
 				printf("%s is not a directory!\r\n", currentPwd);
@@ -265,5 +265,11 @@ void READ(char ** cmds) //read file
 
 void UMASK(char ** cmds) //set the file or folder's attributes
 {
-
+	if(cmds == NULL){
+		printf("Params number is not right!\r\n");
+		return;
+	}
+	else{
+		setUmask(currentUser, cmds[1]);
+	}
 }

@@ -321,15 +321,38 @@ void * pathCat(char * path, char * path2)
 void setUmask(User * userP, char * s)
 {
 	if(NULL == s){
+		printf("param is not valid!\r\n");
 		return;
 	}
-	if(strlen(s) > 4){
+	int len = strlen(s);
+	if(len != 3){
+		printf("mask length is not right!\r\n");
 		return;
 	}
 	if(!isDigit(s)){
+		printf("mask is not right!\r\n");
 		return;
 	}
-
+	int mask = 0;
+	int ch = s[2];
+	int value = ch - '0';
+	if(value < 0 || value > 7){
+		return;
+	}
+	mask = value;
+	int ch = s[1];
+	int value = ch - '0';
+	if(value < 0 || value > 7){
+		return;
+	}
+	mask = value * 8;
+	int ch = s[0];
+	int value = ch - '0';
+	if(value < 0 || value > 7){
+		return;
+	}
+	mask = value * 8 * 8;
+	userP->umask = mask;
 }
 
 BOOL isDigit(char * s)

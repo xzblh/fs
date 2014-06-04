@@ -7,6 +7,7 @@
 #include "tool.h"
 #include "superBlock.h"
 #include "operate.h"
+#include "INODE.h"
 
 #define PWD_LENGTH 1024
 
@@ -119,6 +120,7 @@ void initSuperBlock()
 
 			currentUser->GID = 0;
 			currentUser->UID = 0;
+			currentUser->umask = 2;
 			strcpy(currentUser->passwd, "root");
 			strcpy(currentUser->username, "root");
 			superBlockPointer->blockFreeCount = superBlockPointer->blockCount - 530;
@@ -138,7 +140,7 @@ void initSuperBlock()
 			//创建根节点，即“/”文件夹
 			writeRoot(superBlockPointer);
 			
-			createFile(superBlockPointer->inode, "user");
+			createFile(superBlockPointer->inode, "user", ~currentUser->umask & _664_AUTHORITY_FILE_);
 			FILE_FS * fileFsP = openFile("/user");
 			if(fileFsP == NULL){
 				printf("can not open file: /user\r\n");
