@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "block.h"
 #include "superBlock.h"
@@ -103,9 +104,12 @@ int readFileContent(FILE_FS * fileFsP)
 
 void writeFileBuffer(FILE_FS * fileFsP, char * s)
 {
+	fseekFs(fileFsP, fileFsP->inodeP->length); //移动当前光标到文件最后
 	unsigned int sLength = strlen(s);
-	unsigned int pos = fileFsP->offset % 512;
-	if(pos + sLength <= superBlockPointer->blockSize){
+	unsigned int pos = fileFsP->offset % superBlockPointer->blockSize;
+	unsigned int offset = pos + sLength;
+	if(offset < (fileFsP->inodeP->length / superBlockPointer->blockSize + 1)
+			*superBlockPointer->blockSize){
 		//不用增加扇区
 		strcpy((char *)fileFsP->mem + pos, s);
 		writeFileContent(fileFsP);
@@ -114,6 +118,27 @@ void writeFileBuffer(FILE_FS * fileFsP, char * s)
 		fileFsP->offset += sLength;
 	}
 	else{
+		BLOCK * blockP = getBlock(getFreeBlockNumber(superBlockPointer));
+
+		//写当前缓存能容纳的那部分数据
+		memcpy((char *)fileFsP->mem + pos, s, superBlockPointer->blockSize - pos);
+		writeFileContent(fileFsP);
+		fileFsP->inodeP->length += superBlockPointer->blockSize - pos;
+		writeINODE(fileFsP->inodeP);
+
+		//复制剩下的部分中的一部分到内存，并写入磁盘
+		memcpy((char *)fileFsP->mem, s + superBlockPointer->blockSize - pos,
+			sLength - superBlockPointer->blockSize + pos);
+		writeFileContent(fileFsP);
+		fileFsP->inodeP->length += sLength - superBlockPointer->blockSize + pos;
+		writeINODE(fileFsP->inodeP);
+
+		//如果还没全部写入，递归调用继续写入磁盘
+		if(sLength > superBlockPointer->blockSize){
+			writeFileBuffer(fileFsP, s+superBlockPointer->blockSize);
+		}
+		//现在实现了……
+		// blockP
 		//暂时不实现，测试数据都很小的
 		//至少需要增加一个扇区
 	}
@@ -510,9 +535,18 @@ int getCurrentBlockNumber(FILE_FS * fileFsP)
 	return p[fileFsP->offset / superBlockPointer->blockSize];
 }
 
+int addBlockNumber(FILE_FS * fileFsP, unsigned int blockNumber)
+{
+	int * p = (int *)fileFsP->inodeP->mem;
+	p[fileFsP->offset / superBlockPointer->blockSize + 1] = blockNumber;
+	return 0;
+}
+
 void freeFILE_FS(FILE_FS * fileFsP)
 {
-	freeInode(fileFsP->inodeP);
+	if(fileFsP->inodeP != superBlockPointer->inode){
+		freeInode(fileFsP->inodeP);
+	}
 	free(fileFsP->mem);
 	free(fileFsP);
 }

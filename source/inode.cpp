@@ -249,9 +249,9 @@ void printInode(INODE * inodeP)
 	//printf(ctime(&inodeP->aTime));
 	//printf(ctime(&inodeP->mTime));
 	tmpTime = localtime(&inodeP->cTime);
-	printf("cTime:%02d-%02d\t", tmpTime->tm_hour, tmpTime->tm_sec);
+	printf("cTime:%02d-%02d\t", tmpTime->tm_min, tmpTime->tm_sec);
 	tmpTime = localtime(&inodeP->aTime);
-	printf("aTime:%02d-%02d\t", tmpTime->tm_hour, tmpTime->tm_sec);
+	printf("aTime:%02d-%02d\t", tmpTime->tm_min, tmpTime->tm_sec);
 	//tmpTime = localtime(&inodeP->mTime);
 	//printf("修改时间：%d-%d-%d\t", tmpTime->tm_year, tmpTime->tm_mon, tmpTime->tm_mday);
 	printf("size:%d B\t", inodeP->length);

@@ -79,7 +79,7 @@ void run()
 		else if(strcmp(cmds[0], "exit") == 0){
 			return ;
 		}
-		else if(strcmp(cmds[0], "pwd")){
+		else if(strcmp(cmds[0], "pwd") == 0){
 			printf("%s\r\n", currentPwd);
 		}
 		else{
@@ -167,6 +167,7 @@ int main()
 	currentUser = (User*)Malloc(sizeof(User));
 	currentUser->username = (char*)Malloc(16);
 	currentUser->passwd = (char*)Malloc(16);
+	currentUser->umask = 2;
 
 	currentPwd = (char *)Malloc(PWD_LENGTH);
 	memset(currentPwd, 0, PWD_LENGTH);

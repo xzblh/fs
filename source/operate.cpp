@@ -225,6 +225,9 @@ void WRITE(char ** cmds) //write file
 		printf("input the file content!\r\n");
 		char * mem = (char *)Malloc(512);
 		scanf("%512[^\n]", mem);
+		time(&fileFsP->inodeP->aTime);
+		time(&fileFsP->inodeP->mTime);
+		writeINODE(fileFsP->inodeP);
 		writeFileBuffer(fileFsP, mem);
 		free(mem);
 	}
@@ -247,6 +250,9 @@ void READ(char ** cmds) //read file
 	if(NULL == fileFsP){
 		printf("no such file!\r\n");
 	}
+	else if(!isFile(fileFsP->inodeP)){
+		printf("%s is not a file!\r\n", cmds[1]);
+	}
 	else{
 		char str[32];
 		memset(str, 0, 32);
@@ -258,6 +264,8 @@ void READ(char ** cmds) //read file
 				printf("%c", ch);
 			}
 		}
+		time(&fileFsP->inodeP->aTime);
+		writeINODE(fileFsP->inodeP);
 		printf("\r\n");
 	}
 
@@ -268,6 +276,9 @@ void UMASK(char ** cmds) //set the file or folder's attributes
 	if(cmds == NULL){
 		printf("Params number is not right!\r\n");
 		return;
+	}
+	else if(cmds[1] == NULL || strcmp(cmds[1], "-l") == 0 ){
+		printf("%d%d%d\r\n", currentUser->umask/8, currentUser->umask/8/8, currentUser->umask%8);
 	}
 	else{
 		setUmask(currentUser, cmds[1]);

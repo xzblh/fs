@@ -36,5 +36,6 @@ FILE_FS * createFILE_FS(INODE* inodeP);
 void * getLine(FILE_FS * fileFsP, void * mem);
 int getCurrentBlockNumber(FILE_FS * fileFsP);
 void freeFILE_FS(FILE_FS * fileFsP);
+int addBlockNumber(FILE_FS * fileFsP, unsigned int blockNumber);
 int fseekFs(FILE_FS * fileFsP, unsigned int offset);
 int getFileInodeInFolder(FILE_FS * fileFsP, char * fileName);

@@ -92,7 +92,7 @@ BOOL _login(char * username, char * password)
 		return FALSE;
 	}
 	User * userP = getUser(fileFsP);
-	if(usrP != NULL && strcmp(userP->username, username) == 0 && strcmp(userP->passwd, password) == 0){
+	if(userP != NULL && strcmp(userP->username, username) == 0 && strcmp(userP->passwd, password) == 0){
 		return TRUE;
 	}
 	else{
@@ -109,6 +109,7 @@ INODE * getInode(char * path) //等价于书上的NameI()
 		return NULL;
 	}
 	if(strcmp(path, "/") == 0){
+		//return getINODE(superBlockPointer->inode->inodeNumber);
 		return superBlockPointer->inode;
 	}
 	INODE * inodeP = superBlockPointer->inode;
@@ -334,24 +335,24 @@ void setUmask(User * userP, char * s)
 		return;
 	}
 	int mask = 0;
-	int ch = s[2];
+	char ch = s[2];
 	int value = ch - '0';
 	if(value < 0 || value > 7){
 		return;
 	}
 	mask = value;
-	int ch = s[1];
-	int value = ch - '0';
+	ch = s[1];
+	value = ch - '0';
 	if(value < 0 || value > 7){
 		return;
 	}
-	mask = value * 8;
-	int ch = s[0];
-	int value = ch - '0';
+	mask += value * 8;
+	ch = s[0];
+	value = ch - '0';
 	if(value < 0 || value > 7){
 		return;
 	}
-	mask = value * 8 * 8;
+	mask += value * 8 * 8;
 	userP->umask = mask;
 }
 
