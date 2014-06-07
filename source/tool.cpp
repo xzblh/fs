@@ -38,6 +38,7 @@ void * Malloc(unsigned int Size_t)
 	void * _p = malloc(Size_t);
 	if (_p == NULL){
 		printf("内存申请失败！\r\n");
+		getchar();
 		exit(-3);
 	}
 	memset(_p, 0, Size_t);
@@ -187,7 +188,7 @@ int countMem(void * mem, int length)
 int countChar(unsigned char ch)
 {
 	int count = 0;
-	while(ch){
+	while(ch % 2){
 		ch = ch >> 1;
 		count ++;
 	}
@@ -268,15 +269,74 @@ BOOL hasCreateFileAuthority(INODE * inodeP, User * userP)
 		return TRUE;
 	}
 	if(userP->GID == inodeP->GID){
-		if(inodeP->authority && _GROUP_WRITE_DEFINE_)
+		if(inodeP->authority & _GROUP_WRITE_DEFINE_)
 			return TRUE;
 		else
 			return FALSE;
 	}
-	if(inodeP->authority && _OTHER_WRITE_DEFINE_)
+	if(inodeP->authority & _OTHER_WRITE_DEFINE_){
 		return TRUE;
-	else
-		return FALSE;
+	}
+	return FALSE;
+}
+
+BOOL hasReadAuthority(INODE * inodeP, User * userP)
+{
+	if(userP->UID == 0){
+		//ROOT 则返回TRUE
+		return TRUE;
+	}
+	if(userP->UID == inodeP->UID){
+		return TRUE;
+	}
+	if(userP->GID == inodeP->GID){
+		if(inodeP->authority & _GROUP_READ_DEFINE_)
+			return TRUE;
+	}
+	if(inodeP->authority & _OTHER_READ_DEFINE_){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL hasWriteAuthority(INODE * inodeP, User * userP)
+{
+	if(userP->UID == 0){
+		//ROOT 则返回TRUE
+		return TRUE;
+	}
+	if(userP->UID == inodeP->UID){
+		return TRUE;
+	}
+	if(userP->GID == inodeP->GID){
+		if(inodeP->authority & _GROUP_WRITE_DEFINE_){
+			return TRUE;
+		}
+	}
+	if(inodeP->authority & _OTHER_WRITE_DEFINE_){
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL hasGetIntoAuthority(INODE * inodeP, User * userP)
+{
+	if(userP->UID == 0){
+		//ROOT 则返回TRUE
+		return TRUE;
+	}
+	if(userP->UID == inodeP->UID){
+		return TRUE;
+	}
+	if(userP->GID == inodeP->GID){
+		if(inodeP->authority & _GROUP_EXEC_DEFINE_){
+			return TRUE;
+		}
+	}
+	if(inodeP->authority & _OTHER_EXEC_DEFINE_){
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void writeNull(unsigned int count, FILE * fp)

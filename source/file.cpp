@@ -108,8 +108,7 @@ void writeFileBuffer(FILE_FS * fileFsP, char * s)
 	unsigned int sLength = strlen(s);
 	unsigned int pos = fileFsP->offset % superBlockPointer->blockSize;
 	unsigned int offset = pos + sLength;
-	if(offset < (fileFsP->inodeP->length / superBlockPointer->blockSize + 1)
-			*superBlockPointer->blockSize){
+	if(offset < superBlockPointer->blockSize){
 		//不用增加扇区
 		strcpy((char *)fileFsP->mem + pos, s);
 		writeFileContent(fileFsP);
@@ -118,20 +117,31 @@ void writeFileBuffer(FILE_FS * fileFsP, char * s)
 		fileFsP->offset += sLength;
 	}
 	else{
-		BLOCK * blockP = getBlock(getFreeBlockNumber(superBlockPointer));
+		//int blockNumber = getFreeBlockNumber(superBlockPointer);
 
 		//写当前缓存能容纳的那部分数据
 		memcpy((char *)fileFsP->mem + pos, s, superBlockPointer->blockSize - pos);
 		writeFileContent(fileFsP);
 		fileFsP->inodeP->length += superBlockPointer->blockSize - pos;
+		fseekFs(fileFsP, fileFsP->inodeP->length);
 		writeINODE(fileFsP->inodeP);
 
 		//复制剩下的部分中的一部分到内存，并写入磁盘
-		memcpy((char *)fileFsP->mem, s + superBlockPointer->blockSize - pos,
-			sLength - superBlockPointer->blockSize + pos);
-		writeFileContent(fileFsP);
-		fileFsP->inodeP->length += sLength - superBlockPointer->blockSize + pos;
-		writeINODE(fileFsP->inodeP);
+		if(sLength > superBlockPointer->blockSize){
+			memcpy((char *)fileFsP->mem, s + superBlockPointer->blockSize - pos, pos);
+			writeFileContent(fileFsP);
+			fileFsP->inodeP->length += pos;
+			fseekFs(fileFsP, fileFsP->inodeP->length);
+			writeINODE(fileFsP->inodeP);
+		}
+		else{
+			memcpy((char *)fileFsP->mem, s + superBlockPointer->blockSize - pos,
+				sLength -superBlockPointer->blockSize + pos);
+			writeFileContent(fileFsP);
+			fileFsP->inodeP->length += sLength -superBlockPointer->blockSize + pos;
+			fseekFs(fileFsP, fileFsP->inodeP->length);
+			writeINODE(fileFsP->inodeP);
+		}
 
 		//如果还没全部写入，递归调用继续写入磁盘
 		if(sLength > superBlockPointer->blockSize){
@@ -305,6 +315,7 @@ int createDir(INODE * inodeP, char * dirName, unsigned int authority)
 			BLOCK * blockP = createBlock();
 			//在原来文件夹的间接扇区上增加新增的扇区编号
 			inodeMemAddBlock(inodeP, blockP->blockNumber);
+			initBlock(blockP);
 			freeBlock(blockP);
 		}
 	}

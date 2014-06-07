@@ -101,6 +101,7 @@ void writeINODE(INODE * inodeP)
 	}
 	else{
 		printf("文件指针偏移失败，请重新打开程序尝试，不成功则程序已崩溃……！\r\n");
+		getchar();
 		exit(-255);
 	}
 }
@@ -203,7 +204,7 @@ int getBlockNumber(INODE * inodeP, unsigned int offset)
 void inodeMemAddBlock(INODE * inodeP, int blockNumber)
 {
 	int * p = (int *)inodeP->mem;
-	p[inodeP->length / 4] = blockNumber;
+	p[inodeP->length / superBlockPointer->blockSize] = blockNumber;
 	//刷新磁盘
 	writeINODE(inodeP);
 }
@@ -218,7 +219,7 @@ void inodeDirAddFile(INODE * inodeP, void * mem, int length)
 	//当前扇区上添加新增的文件数据。 及文件名和文件的INODE编号
 	BLOCK * blockP = getBlock(getCurrentBlockNumber(inodeP));
 	readBlock(blockP, _mem);
-	memcpy((char*)_mem + inodeP->length, mem, 32);
+	memcpy((char*)_mem + inodeP->length % superBlockPointer->blockSize, mem, 32);
 	writeBlock(blockP, _mem);
 	freeBlock(blockP);
 	inodeP->length += 32;

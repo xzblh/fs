@@ -44,8 +44,13 @@ void CD(char ** cmds) //get into foler
 			if(inodeNumber != 0){
 				INODE * tmpInode = getINODE(inodeNumber);
 				if(isDir(tmpInode) ){
-					pathCat(currentPwd, cmds[1]);
-					printf("Current Dir:%s\r\n", currentPwd);
+					if(!hasGetIntoAuthority(tmpInode, currentUser)){
+						printf("Permission denied!\r\n");
+					}
+					else{
+						pathCat(currentPwd, cmds[1]);
+						printf("Current Dir:%s\r\n", currentPwd);
+					}
 				}
 				else{
 					freeInode(tmpInode);
@@ -103,7 +108,16 @@ void RM(char ** cmds) //remove file
 	}
 	else{
 		FILE_FS * fieFsP = openFile(currentPwd);
-		removeFile(fieFsP->inodeP, cmds[1]);
+		if(fieFsP == NULL){
+			printf("No such file:%s\r\n", cmds[1]);
+			return;
+		}
+		if(!hasWriteAuthority(fieFsP->inodeP, currentUser)){
+			printf("Permission denied!\r\n");
+		}
+		else{
+			removeFile(fieFsP->inodeP, cmds[1]);
+		}
 	}
 }
 
@@ -115,6 +129,13 @@ void MKDIR(char ** cmds) //create folder
 	}
 	else{
 		FILE_FS *fileFsP = openFile(currentPwd);
+		if(NULL == fileFsP){
+			printf("Cannot open directory:%s\r\n", currentPwd);
+		}
+		else if(!hasWriteAuthority(fileFsP->inodeP, currentUser)){
+			printf("Permission denied!\r\n");
+		}
+
 		if(getFileInodeInFolder(fileFsP, cmds[1])){
 			printf("%s is exist!\r\n", cmds[1]);
 		}
@@ -153,8 +174,16 @@ void RMDIR(char ** cmds) //remove folder
 		return ;
 	}
 	else{
-		FILE_FS * fieFsP = openFile(currentPwd);
-		removeDir(fieFsP->inodeP, cmds[1]);
+		FILE_FS * fileFsP = openFile(currentPwd);
+		if(NULL == fileFsP){
+			printf("Cannot open directory:%s\r\n", currentPwd);
+		}
+		else if(!hasWriteAuthority(fileFsP->inodeP, currentUser)){
+			printf("Permission denied!\r\n");
+		}
+		else{
+			removeDir(fileFsP->inodeP, cmds[1]);
+		}
 	}
 }
 
@@ -221,10 +250,14 @@ void WRITE(char ** cmds) //write file
 			printf("%s is not a file!\r\n");
 			return ;
 		}
+		if(!hasWriteAuthority(fileFsP->inodeP, currentUser)){
+			printf("Permission denied!\r\n");
+			return;
+		}
 		fseekFs(fileFsP, fileFsP->inodeP->length);
 		printf("input the file content!\r\n");
-		char * mem = (char *)Malloc(512);
-		scanf("%512[^\n]", mem);
+		char * mem = (char *)Malloc(1024);
+		scanf("%1000[^\n]", mem);
 		time(&fileFsP->inodeP->aTime);
 		time(&fileFsP->inodeP->mTime);
 		writeINODE(fileFsP->inodeP);
@@ -253,6 +286,10 @@ void READ(char ** cmds) //read file
 	else if(!isFile(fileFsP->inodeP)){
 		printf("%s is not a file!\r\n", cmds[1]);
 	}
+	else if(!hasReadAuthority(fileFsP->inodeP, currentUser)){
+		printf("Permission denied!\r\n");
+		return;
+	}
 	else{
 		char str[32];
 		memset(str, 0, 32);
@@ -264,6 +301,7 @@ void READ(char ** cmds) //read file
 				printf("%c", ch);
 			}
 		}
+		void * pppp = Malloc(10240);
 		time(&fileFsP->inodeP->aTime);
 		writeINODE(fileFsP->inodeP);
 		printf("\r\n");

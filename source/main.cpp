@@ -83,6 +83,7 @@ void run()
 			printf("%s\r\n", currentPwd);
 		}
 		else{
+			printf("No such command:%s !\r\n", cmds[0]);
 			continue;
 		}
 	}
