@@ -14,3 +14,4 @@ void LS(char ** cmds); //list files attributes 大致完成
 void WRITE(char ** cmds); //write file  大致完成
 void READ(char ** cmds); //read file  大致完成
 void UMASK(char ** cmds); //set the file or folder's attributes
+//void MemInfo();

@@ -184,6 +184,12 @@ BOOL isFile(INODE * inodeP)
 
 void freeInode(INODE * inodeP)
 {
+	if(NULL == inodeP){
+		return;
+	}
+	if(inodeP == superBlockPointer->inode){
+		return;
+	}
 	free(inodeP->mem);
 	free(inodeP);
 }

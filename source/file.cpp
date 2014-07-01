@@ -555,9 +555,10 @@ int addBlockNumber(FILE_FS * fileFsP, unsigned int blockNumber)
 
 void freeFILE_FS(FILE_FS * fileFsP)
 {
-	if(fileFsP->inodeP != superBlockPointer->inode){
-		freeInode(fileFsP->inodeP);
+	if(NULL == fileFsP){
+		return;
 	}
+	freeInode(fileFsP->inodeP);
 	free(fileFsP->mem);
 	free(fileFsP);
 }

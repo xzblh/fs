@@ -19,6 +19,7 @@
 		unsigned int  blockNumber; // 扇区块编号，一重间接方式使用 即单文件大小限制：512*512/4 = 64K
 		unsigned int  length; // 文件长度
 		void * mem; //间接内容的缓冲
+		unsigned int offset; //临时记录当前偏移
 	}INODE;
 
 // 一个unsigned int 共32位从高到低依次

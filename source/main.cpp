@@ -23,14 +23,15 @@ User * currentUser = NULL;
 
 void run()
 {
-	char command[16];
+	char command[32];
 	char ** cmds = NULL;
 	int n = 0;
 	strcpy(currentPwd, "/");
 
 	while (TRUE)
 	{
-		n = scanf("%15[^\n]", command);
+		fflush(stdin);
+		n = scanf("%31[^\n]", command);
 		getchar();
 		if (n < 1){
 			continue;
@@ -82,6 +83,9 @@ void run()
 		else if(strcmp(cmds[0], "pwd") == 0){
 			printf("%s\r\n", currentPwd);
 		}
+		//else if(strcmp(cmds[0], "info") == 0){
+		//	MemInfo();
+		//}
 		else{
 			printf("No such command:%s !\r\n", cmds[0]);
 			continue;

@@ -7,6 +7,8 @@
 #include "file.h"
 #include "operate.h"
 
+#pragma comment(lib,"Psapi.lib")
+
 extern User * currentUser;
 extern SUPER_BLOCK * superBlockPointer;
 extern char * currentPwd;
@@ -53,15 +55,14 @@ void CD(char ** cmds) //get into foler
 					}
 				}
 				else{
-					freeInode(tmpInode);
 					printf("%s is not a directory!\r\n", cmds[1]);
 				}
+				freeInode(tmpInode);
 			}
 			else{
 				printf("No such Directory!\r\n");
 			}
-			free(fileFsP->mem);
-			free(fileFsP);
+			freeFILE_FS(fileFsP);
 		}
 	}
 }
@@ -79,6 +80,7 @@ void TOUCH(char ** cmds) //create file
 			return;
 		}
 		int result = createFile(fileFsP->inodeP, cmds[1], ~currentUser->umask & _664_AUTHORITY_FILE_);
+		freeFILE_FS(fileFsP);
 		switch(result){
 		case -1:
 			printf("%s is not a directory!\r\n", currentPwd);
@@ -118,6 +120,7 @@ void RM(char ** cmds) //remove file
 		else{
 			removeFile(fieFsP->inodeP, cmds[1]);
 		}
+		freeFILE_FS(fieFsP);
 	}
 }
 
@@ -161,9 +164,7 @@ void MKDIR(char ** cmds) //create folder
 				printf("Success!\r\n");
 			}
 		}
-		if(fileFsP->inodeP != superBlockPointer->inode){
-			freeFILE_FS(fileFsP);
-		}
+		freeFILE_FS(fileFsP);
 	}
 
 }
@@ -184,6 +185,7 @@ void RMDIR(char ** cmds) //remove folder
 		else{
 			removeDir(fileFsP->inodeP, cmds[1]);
 		}
+		freeFILE_FS(fileFsP);
 	}
 }
 
@@ -225,9 +227,7 @@ void LS(char ** cmds) //list files attributes
 		printf("\r\n");
 		freeInode(tmpInode);
 	}
-	if(fileFsP->inodeP != superBlockPointer->inode){
-		freeFILE_FS(fileFsP);
-	}
+	freeFILE_FS(fileFsP);
 }
 
 void WRITE(char ** cmds) //write file
@@ -243,8 +243,7 @@ void WRITE(char ** cmds) //write file
 			printf("No such File!\r\n");
 			return;
 		}
-		free(currentDir->mem);
-		free(currentDir);
+		freeFILE_FS(currentDir);
 		FILE_FS * fileFsP = openFile(cmds[1]);
 		if(fileFsP == NULL || !isFile(fileFsP->inodeP)){
 			printf("%s is not a file!\r\n");
@@ -263,6 +262,7 @@ void WRITE(char ** cmds) //write file
 		writeINODE(fileFsP->inodeP);
 		writeFileBuffer(fileFsP, mem);
 		free(mem);
+		freeFILE_FS(fileFsP);
 	}
 }
 
@@ -306,7 +306,7 @@ void READ(char ** cmds) //read file
 		writeINODE(fileFsP->inodeP);
 		printf("\r\n");
 	}
-
+	freeFILE_FS(fileFsP);
 }
 
 void UMASK(char ** cmds) //set the file or folder's attributes
@@ -316,7 +316,7 @@ void UMASK(char ** cmds) //set the file or folder's attributes
 		return;
 	}
 	else if(cmds[1] == NULL || strcmp(cmds[1], "-l") == 0 ){
-		printf("%d%d%d\r\n", currentUser->umask/8, currentUser->umask/8/8, currentUser->umask%8);
+		printf("%d%d%d\r\n", currentUser->umask/8/8, (currentUser->umask/8)%8, currentUser->umask%8);
 	}
 	else{
 		setUmask(currentUser, cmds[1]);
